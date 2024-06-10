@@ -1,0 +1,65 @@
+cmake_minimum_required (VERSION 2.8)
+project(cifx_examples)
+set(PROJECT_VERSION, 2.0.0.0)
+
+message(STATUS ${CMAKE_CURRENT_BINARY_DIR})
+message(STATUS ${CMAKE_SOURCE_DIR})
+
+if ("${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${CMAKE_SOURCE_DIR}")
+	message(STATUS "Set to new value")
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
+endif()
+
+option(LINK_NETXTRANSPORT "Enable linking of the netxtransport library. This requires the netxtransport library to be installed!" OFF)
+
+if (LINK_NETXTRANSPORT)
+        set(LIBRARY_BASE "netxtransport")
+else (LINK_NETXTRANSPORT)
+        set(LIBRARY_BASE "cifx")
+endif (LINK_NETXTRANSPORT)
+
+if(LIBRARY_HEADER OR LIBRARY_INC_LIB)
+        set(LIBRARY_REQ_INCLUDE_DIRS  ${LIBRARY_HEADER})
+        set(LIBRARY_REQ_LIBRARIES "-pthread -lrt -l${LIBRARY_BASE} -L${LIBRARY_INC_LIB}")
+else(LIBRARY_HEADER OR LIBRARY_INC_LIB)
+        include(FindPkgConfig)
+        pkg_check_modules(LIBRARY_REQ REQUIRED ${LIBRARY_BASE})
+endif(LIBRARY_HEADER OR LIBRARY_INC_LIB)
+
+include_directories(${LIBRARY_REQ_INCLUDE_DIRS})
+
+add_executable(cifxsample cifxsample/cifxlinuxsample.c)
+target_include_directories(cifxsample BEFORE PUBLIC cifxsample/)
+target_link_libraries (cifxsample ${LIBRARY_REQ_LIBRARIES})
+install(TARGETS cifxsample DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+file(GLOB CIFXTESTCONSOLE_SRC cifXTestConsole/*.c* cifXTestConsole/shared/*.c*)
+add_executable(cifxtestconsole ${CIFXTESTCONSOLE_SRC})
+target_include_directories(cifxtestconsole BEFORE PUBLIC cifXTestConsole cifXTestConsole/shared)
+target_link_libraries (cifxtestconsole ${LIBRARY_REQ_LIBRARIES})
+install(TARGETS cifxtestconsole DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+set(TCPSERVERDIR "cifXTCPServer/")
+include(${CMAKE_SOURCE_DIR}/cifXTCPServer/CMakeLists.txt)
+
+file(GLOB SPISAMPLE_SRC SPISample/*.c)
+add_executable(cifxspisample ${SPISAMPLE_SRC})
+target_compile_options(cifxspisample PUBLIC "-Wno-format-overflow")
+target_include_directories(cifxspisample BEFORE PUBLIC SPISample/)
+target_link_libraries (cifxspisample ${LIBRARY_REQ_LIBRARIES})
+install(TARGETS cifxspisample DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+file(GLOB LOADABLEMODULES_SRC LoadModules/*.c*)
+add_executable(cifxloadablemodules ${LOADABLEMODULES_SRC})
+message(STATUS ${CIFX_HEADER})
+target_include_directories(cifxloadablemodules PUBLIC LoadModules)
+target_link_libraries (cifxloadablemodules ${LIBRARY_REQ_LIBRARIES})
+install(TARGETS cifxloadablemodules DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+if (NOT LINK_NETXTRANSPORT)
+	file(GLOB ISASAMPLE_SRC ISASample/*.c*)
+	add_executable(cifxisasample ${ISASAMPLE_SRC})
+	target_include_directories(cifxisasample BEFORE PUBLIC ISASample/)
+	target_link_libraries (cifxisasample ${LIBRARY_REQ_LIBRARIES})
+	install(TARGETS cifxisasample DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+endif (NOT LINK_NETXTRANSPORT)
