@@ -1,6 +1,6 @@
 #!/bin/bash
 
-default_path=$(dirname $(realpath $0))"/../BSL/"
+default_path=$(dirname $(realpath $0))"/../cifx_config"
 
 case "$1" in
   "install")
@@ -45,15 +45,18 @@ case "$1" in
   else
       echo "Device number required! Run \"install_firmware help\""
   fi
-  
+ 
   ;;
 
 # single directory 
   "create_single_dir")
+    # echo "Creating directory ../cifx_config/deviceconfig/FW/channel0";
+    # sudo mkdir -p "${default_path}/deviceconfig/FW/"
+    # sudo mkdir -p "${default_path}/deviceconfig/FW/channel0"
     echo "Creating directory /opt/cifx/deviceconfig/FW/channel0";
     sudo mkdir -p /opt/cifx/deviceconfig/FW/
     sudo mkdir -p /opt/cifx/deviceconfig/FW/channel0
-    
+
     if [ "$?" = "0" ]; then
       echo "Copying default config";
       sudo cp ./device.conf /opt/cifx/deviceconfig/FW/

@@ -49,7 +49,7 @@ if [ "${invalid_path}" != "" ]; then
     exit 1
 fi
 
-if [ -d "${builddir}/libcifx" ] || [ -d "${builddir}/uio_netx" ]; then
+if [ -d "${builddir}/uio_netx" ]; then
     echo "********************************************************************************"
     echo "NOTE: The build folder (\"${builddir}\") is not empty! Force overwrting (yes=y)?"
     echo "      Or pass a new build folder (./build_install_driver [my_build_folder]."
@@ -57,7 +57,6 @@ if [ -d "${builddir}/libcifx" ] || [ -d "${builddir}/uio_netx" ]; then
     read delete_files
     if [ "${delete_files}" = "y" ]; then
 	echo "...deleting build folder!"
-	rm -rf "${builddir}/libcifx"
 	rm -rf "${builddir}/uio_netx" 
     else
 	echo "...canceled build process!"
@@ -103,15 +102,16 @@ fi
 ;;
 
 firmware)
-install_step="libcifx"
+install_step="directory_structure"
 echo "************************************************************"
 echo "**** Installing kernel module and firmware               ***"
 echo "************************************************************"
-install_step="libcifx"
-if ! "${scripts_dir}/"install_firmware install ; then        # install firmware
-  echo "Error installing firmware!"
-  install_step="error"
-fi
+install_step="directory_structure"
+# # Installed by default, you can change the directory mannually
+# if ! "${scripts_dir}/"install_firmware install ; then        # install firmware
+#   echo "Error installing firmware!"
+#   install_step="error"
+# fi
 if ! "${scripts_dir}/"install_uio_netx update ; then         # load driver
   echo "Error updating module dependencies!"
   install_step="error"
@@ -126,14 +126,18 @@ if ! "${scripts_dir}/"install_uio_netx load; then
 fi
 ;;
 
-libcifx)
-echo "************************************************************"
-echo "**** Building and installing user space library libcifx  ***"
-echo "************************************************************"
-mkdir -p "${builddir}/libcifx"
-"${scripts_dir}/"install_libcifx "${builddir}/libcifx"
+directory_structure)
+echo "*****************************************************************"
+echo "**** Create directory structure for cifx via single directory ***"
+echo "** Have set a single directory by default, you can change it mannually **"
+echo "*****************************************************************"
 install_step="stop"
+# if ! "${scripts_dir}/"install_firmware create_single_dir ; then        # install firmware
+#   echo "Error installing firmware!"
+#   install_step="error"
+# fi
 ;;
+
 esac
 done  
 cd ..

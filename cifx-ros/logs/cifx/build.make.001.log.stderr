@@ -1,0 +1,266 @@
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_FileRead[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:573:45:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulOffset[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  573 | uint32_t OS_FileRead(void* pvFile, [01;35m[Kuint32_t ulOffset[m[K,
+      |                                    [01;35m[K~~~~~~~~~^~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_MapUserPointer[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:938:53:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulMemSize[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  938 | void* OS_MapUserPointer(void* pvDriverMem, [01;35m[Kuint32_t ulMemSize[m[K,
+      |                                            [01;35m[K~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:939:44:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kos_dependent[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  939 |                 void** ppvMappedMem, [01;35m[Kvoid *os_dependent[m[K, unsigned char fCached) {
+      |                                      [01;35m[K~~~~~~^~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:939:72:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KfCached[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  939 |                 void** ppvMappedMem, void *os_dependent, [01;35m[Kunsigned char fCached[m[K) {
+      |                                                          [01;35m[K~~~~~~~~~~~~~~^~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_UnmapUserPointer[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:955:31:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KphMapping[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  955 | int OS_UnmapUserPointer([01;35m[Kvoid* phMapping[m[K, void *os_dependent) {
+      |                         [01;35m[K~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:955:48:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kos_dependent[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  955 | int OS_UnmapUserPointer(void* phMapping, [01;35m[Kvoid *os_dependent[m[K) {
+      |                                          [01;35m[K~~~~~~^~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_InvalidateCacheMemory_FromDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:968:48:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KpvCachedMemPtr[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  968 | void OS_InvalidateCacheMemory_FromDevice([01;35m[Kvoid* pvCachedMemPtr[m[K, unsigned long ulMemSize) {
+      |                                          [01;35m[K~~~~~~^~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:968:78:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulMemSize[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  968 | void OS_InvalidateCacheMemory_FromDevice(void* pvCachedMemPtr, [01;35m[Kunsigned long ulMemSize[m[K) {
+      |                                                                [01;35m[K~~~~~~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_FlushCacheMemory_ToDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:977:41:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KpvMem[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  977 | void OS_FlushCacheMemory_ToDevice([01;35m[Kvoid* pvMem[m[K, unsigned long ulMemSize)
+      |                                   [01;35m[K~~~~~~^~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:977:62:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulMemSize[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  977 | void OS_FlushCacheMemory_ToDevice(void* pvMem, [01;35m[Kunsigned long ulMemSize[m[K)
+      |                                                [01;35m[K~~~~~~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_FileRead[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:573:45:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulOffset[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  573 | uint32_t OS_FileRead(void* pvFile, [01;35m[Kuint32_t ulOffset[m[K,
+      |                                    [01;35m[K~~~~~~~~~^~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_MapUserPointer[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:938:53:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulMemSize[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  938 | void* OS_MapUserPointer(void* pvDriverMem, [01;35m[Kuint32_t ulMemSize[m[K,
+      |                                            [01;35m[K~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:939:44:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kos_dependent[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  939 |                 void** ppvMappedMem, [01;35m[Kvoid *os_dependent[m[K, unsigned char fCached) {
+      |                                      [01;35m[K~~~~~~^~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:939:72:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KfCached[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  939 |                 void** ppvMappedMem, void *os_dependent, [01;35m[Kunsigned char fCached[m[K) {
+      |                                                          [01;35m[K~~~~~~~~~~~~~~^~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_UnmapUserPointer[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:955:31:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KphMapping[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  955 | int OS_UnmapUserPointer([01;35m[Kvoid* phMapping[m[K, void *os_dependent) {
+      |                         [01;35m[K~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:955:48:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kos_dependent[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  955 | int OS_UnmapUserPointer(void* phMapping, [01;35m[Kvoid *os_dependent[m[K) {
+      |                                          [01;35m[K~~~~~~^~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_InvalidateCacheMemory_FromDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:968:48:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KpvCachedMemPtr[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  968 | void OS_InvalidateCacheMemory_FromDevice([01;35m[Kvoid* pvCachedMemPtr[m[K, unsigned long ulMemSize) {
+      |                                          [01;35m[K~~~~~~^~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:968:78:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulMemSize[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  968 | void OS_InvalidateCacheMemory_FromDevice(void* pvCachedMemPtr, [01;35m[Kunsigned long ulMemSize[m[K) {
+      |                                                                [01;35m[K~~~~~~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:[m[K In function ‘[01m[KOS_FlushCacheMemory_ToDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:977:41:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KpvMem[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  977 | void OS_FlushCacheMemory_ToDevice([01;35m[Kvoid* pvMem[m[K, unsigned long ulMemSize)
+      |                                   [01;35m[K~~~~~~^~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/OS_Linux.c:977:62:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KulMemSize[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  977 | void OS_FlushCacheMemory_ToDevice(void* pvMem, [01;35m[Kunsigned long ulMemSize[m[K)
+      |                                                [01;35m[K~~~~~~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_get_device_alias[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:410:40:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong int[m[K’ and ‘[01m[Ksize_t[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  410 |       if ((buf != NULL) && ((buf+1-ret)[01;35m[K<[m[Kstrlen(ret))) {
+      |                                        [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:412:42:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong int[m[K’ and ‘[01m[Ksize_t[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  412 |         if ((buf != NULL) && ((buf+1-ret)[01;35m[K<[m[Kstrlen(ret))) {
+      |                                          [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_get_device_startuptype[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:445:42:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong int[m[K’ and ‘[01m[Ksize_t[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  445 |       if ((next != NULL) && ((next+1-buf)[01;35m[K<[m[Kstrlen(buf))) {
+      |                                          [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_map_mem[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:532:11:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Klong unsigned int[m[K’ [[01;35m[K-Wsign-compare[m[K]
+  532 |   if( (~0 [01;35m[K!=[m[K (*memaddr = cifx_uio_get_mem_addr(uio_num, map_num))) &&
+      |           [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:533:11:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Klong unsigned int[m[K’ [[01;35m[K-Wsign-compare[m[K]
+  533 |       (~0 [01;35m[K!=[m[K (*memlen  = cifx_uio_get_mem_size(uio_num, map_num))) )
+      |           [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_map_dma_buffer[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:635:23:[m[K [01;35m[Kwarning: [m[Kpointer of type ‘[01m[Kvoid *[m[K’ used in arithmetic [[01;35m[K-Wpointer-arith[m[K]
+  635 |               membase [01;35m[K+=[m[K CIFX_DEFAULT_DMA_BUFFER_SIZE;
+      |                       [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kmatch_pci_card[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:761:24:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Klong unsigned int[m[K’ [[01;35m[K-Wsign-compare[m[K]
+  761 |       for(bar = 0; bar [01;35m[K<[m[K sizeof(dev->regions) / sizeof(dev->regions[0]); ++bar)
+      |                        [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXDriverAddDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:891:17:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kuint32_t[m[K’ {aka ‘[01m[Kunsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  891 |       for (i=0;i[01;35m[K<[m[KptDevice->dma_buffer_cnt;i++)
+      |                 [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXDriverInit[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1111:22:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong unsigned int[m[K’ and ‘[01m[Kint[m[K’ [[01;35m[K-Wsign-compare[m[K]
+ 1111 |     if(poll_interval [01;35m[K!=[m[K CIFX_POLLINTERVAL_DISABLETHREAD)
+      |                      [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetCachedIOBufferMode[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:927:57:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KptDevInfo[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  927 | int USER_GetCachedIOBufferMode([01;35m[KPCIFX_DEVICE_INFORMATION ptDevInfo[m[K)
+      |                                [01;35m[K~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_get_device_alias[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:410:40:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong int[m[K’ and ‘[01m[Ksize_t[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  410 |       if ((buf != NULL) && ((buf+1-ret)[01;35m[K<[m[Kstrlen(ret))) {
+      |                                        [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1301:28:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kunsigned int[m[K’ and ‘[01m[Kint[m[K’ [[01;35m[K-Wsign-compare[m[K]
+ 1301 |         for(temp = 0; temp [01;35m[K<[m[K init_params->user_card_cnt; ++temp)
+      |                            [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:412:42:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong int[m[K’ and ‘[01m[Ksize_t[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  412 |         if ((buf != NULL) && ((buf+1-ret)[01;35m[K<[m[Kstrlen(ret))) {
+      |                                          [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KxDriverRestartDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1326:45:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KhDriver[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+ 1326 |  int32_t xDriverRestartDevice ( [01;35m[KCIFXHANDLE  hDriver[m[K, char* szBoardName, void* pvData)
+      |                                 [01;35m[K~~~~~~~~~~~~^~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_get_device_startuptype[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:445:42:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong int[m[K’ and ‘[01m[Ksize_t[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  445 |       if ((next != NULL) && ((next+1-buf)[01;35m[K<[m[Kstrlen(buf))) {
+      |                                          [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXGetDriverVersion[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1536:13:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kuint32_t[m[K’ {aka ‘[01m[Kunsigned int[m[K’} and ‘[01m[Kint[m[K’ [[01;35m[K-Wsign-compare[m[K]
+ 1536 |   if(ulSize [01;35m[K<[m[K OS_Strlen(LINUXCIFXDRV_VERSION))
+      |             [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXGetDeviceCount[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1565:27:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%u[m[K’ expects argument of type ‘[01m[Kunsigned int *[m[K’, but argument 3 has type ‘[01m[Kint *[m[K’ [[01;35m[K-Wformat=[m[K]
+ 1565 |                      "uio[01;35m[K%u[m[K",
+      |                          [01;35m[K~^[m[K
+      |                           [01;35m[K|[m[K
+      |                           [01;35m[Kunsigned int *[m[K
+      |                          [32m[K%u[m[K
+ 1566 |                      [32m[K&uio_num[m[K))
+      |                      [32m[K~~~~~~~~[m[K
+      |                      [32m[K|[m[K
+      |                      [32m[Kint *[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_map_mem[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:532:11:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Klong unsigned int[m[K’ [[01;35m[K-Wsign-compare[m[K]
+  532 |   if( (~0 [01;35m[K!=[m[K (*memaddr = cifx_uio_get_mem_addr(uio_num, map_num))) &&
+      |           [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:533:11:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Klong unsigned int[m[K’ [[01;35m[K-Wsign-compare[m[K]
+  533 |       (~0 [01;35m[K!=[m[K (*memlen  = cifx_uio_get_mem_size(uio_num, map_num))) )
+      |           [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXFindDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1617:33:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%u[m[K’ expects argument of type ‘[01m[Kunsigned int *[m[K’, but argument 3 has type ‘[01m[Kint *[m[K’ [[01;35m[K-Wformat=[m[K]
+ 1617 |                            "uio[01;35m[K%u[m[K",
+      |                                [01;35m[K~^[m[K
+      |                                 [01;35m[K|[m[K
+      |                                 [01;35m[Kunsigned int *[m[K
+      |                                [32m[K%u[m[K
+ 1618 |                            [32m[K&uio_num[m[K))
+      |                            [32m[K~~~~~~~~[m[K
+      |                            [32m[K|[m[K
+      |                            [32m[Kint *[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kcifx_uio_map_dma_buffer[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:635:23:[m[K [01;35m[Kwarning: [m[Kpointer of type ‘[01m[Kvoid *[m[K’ used in arithmetic [[01;35m[K-Wpointer-arith[m[K]
+  635 |               membase [01;35m[K+=[m[K CIFX_DEFAULT_DMA_BUFFER_SIZE;
+      |                       [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetCachedIOBufferMode[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:927:57:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KptDevInfo[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+  927 | int USER_GetCachedIOBufferMode([01;35m[KPCIFX_DEVICE_INFORMATION ptDevInfo[m[K)
+      |                                [01;35m[K~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetFirmwareFile[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:394:26:[m[K [01;35m[Kwarning: [m[K‘[01m[K%s[m[K’ directive output may be truncated writing up to 255 bytes into a region of size between 0 and 259 [[01;35m[K-Wformat-truncation=[m[K]
+  394 |                      "%s/[01;35m[K%s[m[K", szPath, dirent->d_name);
+      |                          [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:393:13:[m[K [01;36m[Knote: [m[K‘[01m[Ksnprintf[m[K’ output between 2 and 516 bytes into a destination of size 260
+  393 |             [01;36m[Ksnprintf(ptFileInfo->szFullFileName, sizeof(ptFileInfo->szFullFileName),[m[K
+      |             [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+  394 | [01;36m[K                     "%s/%s", szPath, dirent->d_name)[m[K;
+      |                      [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[Kmatch_pci_card[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:761:24:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Klong unsigned int[m[K’ [[01;35m[K-Wsign-compare[m[K]
+  761 |       for(bar = 0; bar [01;35m[K<[m[K sizeof(dev->regions) / sizeof(dev->regions[0]); ++bar)
+      |                        [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetConfigurationFile[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:474:26:[m[K [01;35m[Kwarning: [m[K‘[01m[K%s[m[K’ directive output may be truncated writing up to 255 bytes into a region of size between 0 and 259 [[01;35m[K-Wformat-truncation=[m[K]
+  474 |                      "%s/[01;35m[K%s[m[K", szPath, dirent->d_name);
+      |                          [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:473:13:[m[K [01;36m[Knote: [m[K‘[01m[Ksnprintf[m[K’ output between 2 and 516 bytes into a destination of size 260
+  473 |             [01;36m[Ksnprintf(ptFileInfo->szFullFileName, sizeof(ptFileInfo->szFullFileName),[m[K
+      |             [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+  474 | [01;36m[K                     "%s/%s", szPath, dirent->d_name)[m[K;
+      |                      [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXDriverAddDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:891:17:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kuint32_t[m[K’ {aka ‘[01m[Kunsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+  891 |       for (i=0;i[01;35m[K<[m[KptDevice->dma_buffer_cnt;i++)
+      |                 [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetOSFile[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:700:23:[m[K [01;35m[Kwarning: [m[K‘[01m[K%s[m[K’ directive output may be truncated writing up to 255 bytes into a region of size between 0 and 259 [[01;35m[K-Wformat-truncation=[m[K]
+  700 |                   "%s/[01;35m[K%s[m[K", szPath, dirent->d_name);
+      |                       [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:699:11:[m[K [01;36m[Knote: [m[K‘[01m[Ksnprintf[m[K’ output between 2 and 516 bytes into a destination of size 260
+  699 |           [01;36m[Ksnprintf(ptFileInfo->szFullFileName, sizeof(ptFileInfo->szFullFileName),[m[K
+      |           [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+  700 | [01;36m[K                  "%s/%s", szPath, dirent->d_name)[m[K;
+      |                   [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetFirmwareFile[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:394:26:[m[K [01;35m[Kwarning: [m[K‘[01m[K%s[m[K’ directive output may be truncated writing up to 255 bytes into a region of size between 0 and 259 [[01;35m[K-Wformat-truncation=[m[K]
+  394 |                      "%s/[01;35m[K%s[m[K", szPath, dirent->d_name);
+      |                          [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:393:13:[m[K [01;36m[Knote: [m[K‘[01m[Ksnprintf[m[K’ output between 2 and 516 bytes into a destination of size 260
+  393 |             [01;36m[Ksnprintf(ptFileInfo->szFullFileName, sizeof(ptFileInfo->szFullFileName),[m[K
+      |             [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+  394 | [01;36m[K                     "%s/%s", szPath, dirent->d_name)[m[K;
+      |                      [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXDriverInit[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1111:22:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Klong unsigned int[m[K’ and ‘[01m[Kint[m[K’ [[01;35m[K-Wsign-compare[m[K]
+ 1111 |     if(poll_interval [01;35m[K!=[m[K CIFX_POLLINTERVAL_DISABLETHREAD)
+      |                      [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetConfigurationFile[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:474:26:[m[K [01;35m[Kwarning: [m[K‘[01m[K%s[m[K’ directive output may be truncated writing up to 255 bytes into a region of size between 0 and 259 [[01;35m[K-Wformat-truncation=[m[K]
+  474 |                      "%s/[01;35m[K%s[m[K", szPath, dirent->d_name);
+      |                          [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:473:13:[m[K [01;36m[Knote: [m[K‘[01m[Ksnprintf[m[K’ output between 2 and 516 bytes into a destination of size 260
+  473 |             [01;36m[Ksnprintf(ptFileInfo->szFullFileName, sizeof(ptFileInfo->szFullFileName),[m[K
+      |             [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+  474 | [01;36m[K                     "%s/%s", szPath, dirent->d_name)[m[K;
+      |                      [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:[m[K In function ‘[01m[KUSER_GetOSFile[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:700:23:[m[K [01;35m[Kwarning: [m[K‘[01m[K%s[m[K’ directive output may be truncated writing up to 255 bytes into a region of size between 0 and 259 [[01;35m[K-Wformat-truncation=[m[K]
+  700 |                   "%s/[01;35m[K%s[m[K", szPath, dirent->d_name);
+      |                       [01;35m[K^~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1301:28:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kunsigned int[m[K’ and ‘[01m[Kint[m[K’ [[01;35m[K-Wsign-compare[m[K]
+ 1301 |         for(temp = 0; temp [01;35m[K<[m[K init_params->user_card_cnt; ++temp)
+      |                            [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/USER_Linux.c:699:11:[m[K [01;36m[Knote: [m[K‘[01m[Ksnprintf[m[K’ output between 2 and 516 bytes into a destination of size 260
+  699 |           [01;36m[Ksnprintf(ptFileInfo->szFullFileName, sizeof(ptFileInfo->szFullFileName),[m[K
+      |           [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+  700 | [01;36m[K                  "%s/%s", szPath, dirent->d_name)[m[K;
+      |                   [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KxDriverRestartDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1326:45:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[KhDriver[m[K’ [[01;35m[K-Wunused-parameter[m[K]
+ 1326 |  int32_t xDriverRestartDevice ( [01;35m[KCIFXHANDLE  hDriver[m[K, char* szBoardName, void* pvData)
+      |                                 [01;35m[K~~~~~~~~~~~~^~~~~~~[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXGetDriverVersion[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1536:13:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kuint32_t[m[K’ {aka ‘[01m[Kunsigned int[m[K’} and ‘[01m[Kint[m[K’ [[01;35m[K-Wsign-compare[m[K]
+ 1536 |   if(ulSize [01;35m[K<[m[K OS_Strlen(LINUXCIFXDRV_VERSION))
+      |             [01;35m[K^[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXGetDeviceCount[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1565:27:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%u[m[K’ expects argument of type ‘[01m[Kunsigned int *[m[K’, but argument 3 has type ‘[01m[Kint *[m[K’ [[01;35m[K-Wformat=[m[K]
+ 1565 |                      "uio[01;35m[K%u[m[K",
+      |                          [01;35m[K~^[m[K
+      |                           [01;35m[K|[m[K
+      |                           [01;35m[Kunsigned int *[m[K
+      |                          [32m[K%u[m[K
+ 1566 |                      [32m[K&uio_num[m[K))
+      |                      [32m[K~~~~~~~~[m[K
+      |                      [32m[K|[m[K
+      |                      [32m[Kint *[m[K
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:[m[K In function ‘[01m[KcifXFindDevice[m[K’:
+[01m[K/home/cyz/Hilscher-Ethercat-Master/cifx-ros/src/cifx/libcifx/cifxlinux.c:1617:33:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%u[m[K’ expects argument of type ‘[01m[Kunsigned int *[m[K’, but argument 3 has type ‘[01m[Kint *[m[K’ [[01;35m[K-Wformat=[m[K]
+ 1617 |                            "uio[01;35m[K%u[m[K",
+      |                                [01;35m[K~^[m[K
+      |                                 [01;35m[K|[m[K
+      |                                 [01;35m[Kunsigned int *[m[K
+      |                                [32m[K%u[m[K
+ 1618 |                            [32m[K&uio_num[m[K))
+      |                            [32m[K~~~~~~~~[m[K
+      |                            [32m[K|[m[K
+      |                            [32m[Kint *[m[K
