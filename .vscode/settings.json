@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "warmstartfile.h": "c",
-        "errno.h": "c"
-    }
-}

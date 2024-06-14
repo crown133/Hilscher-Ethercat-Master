@@ -1,8 +1,0 @@
-prefix=/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx
-
-Name: cifx
-Description: Description of cifx
-Version: 1.0.0
-Cflags: 
-Libs: -L${prefix}/lib -lcifx
-Requires: roscpp
