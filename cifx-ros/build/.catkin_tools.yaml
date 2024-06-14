@@ -1,6 +1,0 @@
-devel_space: /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel
-install: false
-install_space: /home/cyz/Hilscher-Ethercat-Master/cifx-ros/install
-profile: default
-source_space: /home/cyz/Hilscher-Ethercat-Master/cifx-ros/src
-workspace: /home/cyz/Hilscher-Ethercat-Master/cifx-ros

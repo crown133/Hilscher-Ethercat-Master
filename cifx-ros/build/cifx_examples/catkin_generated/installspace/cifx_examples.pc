@@ -1,8 +1,0 @@
-prefix=/home/cyz/Hilscher-Ethercat-Master/cifx-ros/install
-
-Name: cifx_examples
-Description: Description of cifx_examples
-Version: 1.0.0
-Cflags: 
-Libs: -L${prefix}/lib -lcifx_examples
-Requires: pthread rt cifx

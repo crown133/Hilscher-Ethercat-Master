@@ -1,8 +1,0 @@
-cifx_card/cifx
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx/cmake.lock /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/./cmake.lock
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx/share/cifx/cmake/cifxConfig-version.cmake /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/share/cifx/cmake/cifxConfig-version.cmake
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx/share/cifx/cmake/cifxConfig.cmake /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/share/cifx/cmake/cifxConfig.cmake
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx/lib/libcifx_lbt.so /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/libcifx_lbt.so
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx/lib/libcifx.a /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/libcifx.a
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx/lib/libcifx.so /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/libcifx.so
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx/lib/pkgconfig/cifx.pc /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/pkgconfig/cifx.pc
