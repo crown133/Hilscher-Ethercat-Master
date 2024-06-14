@@ -1,1 +1,0 @@
-/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/share/cifx_examples/cmake/cifx_examplesConfig.cmake
