@@ -1,0 +1,36 @@
+# ignore build and obj
+/build/
+/devel/
+/logs/
+/bin/
+/obj/
+/install/
+
+/.catkin_tools/
+
+*.o
+*.a
+*.so
+*.exe
+*.dll
+*.dylib
+
+# ignore CMake 
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# ignore IDE 
+*.log
+*.swp
+*.swo
+*.user
+.idea/
+.vscode/
+
+# ignore tmp
+*~
+*.tmp
+*.bak
+*.old
