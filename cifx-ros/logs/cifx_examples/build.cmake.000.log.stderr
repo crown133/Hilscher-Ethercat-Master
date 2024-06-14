@@ -1,0 +1,10 @@
+[31m[1mCMake Error[0m at /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/share/cifx/cmake/cifxConfig.cmake:173 (message):
+  Project 'cifx_examples' tried to find library 'cifx'.  The library is
+  neither a target nor built/installed properly.  Did you compile project
+  'cifx'? Did you find_package() it before the subdirectory containing its
+  code is included?
+[36mCall Stack (most recent call first):[0m
+  /opt/ros/noetic/share/catkin/cmake/catkinConfig.cmake:76 (find_package)
+  CMakeLists.txt:8 (find_package)
+
+

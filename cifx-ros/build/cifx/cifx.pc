@@ -1,0 +1,11 @@
+prefix=
+exec_prefix=
+libdir=
+includedir=
+
+Name: libcifx
+Description: Hilscher cifX user space library
+Requires: pciaccess
+Version: 
+Libs: -L -lcifx -lpthread -lrt -lpciaccess 
+Cflags: -I/cifx

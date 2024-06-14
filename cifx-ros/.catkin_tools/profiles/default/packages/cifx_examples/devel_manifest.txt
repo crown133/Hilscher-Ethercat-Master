@@ -1,0 +1,10 @@
+cifx_card/cifx_examples
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/cmake.lock /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/./cmake.lock
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/share/cifx_examples/cmake/cifx_examplesConfig-version.cmake /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/share/cifx_examples/cmake/cifx_examplesConfig-version.cmake
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/share/cifx_examples/cmake/cifx_examplesConfig.cmake /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/share/cifx_examples/cmake/cifx_examplesConfig.cmake
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/lib/pkgconfig/cifx_examples.pc /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/pkgconfig/cifx_examples.pc
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/lib/cifx_examples/cifxspisample /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/cifx_examples/cifxspisample
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/lib/cifx_examples/cifxsample /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/cifx_examples/cifxsample
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/lib/cifx_examples/cifxisasample /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/cifx_examples/cifxisasample
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/lib/cifx_examples/cifxtestconsole /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/cifx_examples/cifxtestconsole
+/home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/cifx_examples/lib/cifx_examples/cifxloadablemodules /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/lib/cifx_examples/cifxloadablemodules

@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/cyz/Hilscher-Ethercat-Master/cifx-ros/devel/.private/catkin_tools_prebuild/setup.sh
