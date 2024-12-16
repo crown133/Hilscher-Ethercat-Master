@@ -1,0 +1,148 @@
+ethercat_master:
+  time_step:                          0.001
+  update_rate_too_low_warn_threshold: 50
+
+ethercat_devices:
+  - type:               Elmo
+    name:               LeftLegHTAAElmo
+    configuration_file: device_configurations/elmo_hip_yaw.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   2
+
+  - type:               Elmo
+    name:               LeftLegHAAElmo
+    configuration_file: device_configurations/elmo_hip_roll.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   3
+
+  - type:               Elmo
+    name:               LeftLegHFEElmo
+    configuration_file: device_configurations/elmo_hip_pitch.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   4
+
+  - type:               Elmo
+    name:               LeftLegKFEElmo
+    configuration_file: device_configurations/elmo_knee.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   5
+  
+  - type:               Elmo
+    name:               LeftLegAAAElmo
+    configuration_file: device_configurations/elmo_ankle.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   6
+
+  - type:               Elmo
+    name:               LeftLegAFEElmo
+    configuration_file: device_configurations/elmo_ankle.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   7
+
+  - type:               Elmo
+    name:               RightLegHTAAElmo
+    configuration_file: device_configurations/elmo_hip_yaw.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   8
+
+  - type:               Elmo
+    name:               RightLegHAAElmo
+    configuration_file: device_configurations/elmo_hip_roll.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   9
+
+  - type:               Elmo
+    name:               RightLegHFEElmo
+    configuration_file: device_configurations/elmo_hip_pitch.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   10
+
+  - type:               Elmo
+    name:               RightLegKFEElmo
+    configuration_file: device_configurations/elmo_knee.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   11
+
+  - type:               Elmo
+    name:               RightLegAAAElmo
+    configuration_file: device_configurations/elmo_ankle.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   12
+
+  - type:               Elmo
+    name:               RightLegAFEElmo
+    configuration_file: device_configurations/elmo_ankle.yaml
+    ethercat_bus:       eno1
+    ethercat_address:   13
+
+  # - type:               Elmo
+  #   name:               LeftLegHTAA
+  #   configuration_file: device_configurations/elmo_hip_yaw.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   1
+
+  # - type:               Elmo
+  #   name:               LeftLegHAA
+  #   configuration_file: device_configurations/elmo_hip_roll.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   2
+
+  # - type:               Elmo
+  #   name:               LeftLegHFE
+  #   configuration_file: device_configurations/elmo_hip_pitch.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   3
+
+  # - type:               Elmo
+  #   name:               LeftLegKFE
+  #   configuration_file: device_configurations/elmo_knee.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   4
+  
+  # - type:               Elmo
+  #   name:               LeftLegAFE
+  #   configuration_file: device_configurations/elmo_ankle.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   5
+
+  # - type:               Elmo
+  #   name:               LeftLegAAA
+  #   configuration_file: device_configurations/elmo_ankle.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   6
+
+  # - type:               Elmo
+  #   name:               RightLegHipYawElmo
+  #   configuration_file: device_configurations/elmo_hip_90.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   7
+
+  # - type:               Elmo
+  #   name:               RightLegHipRollElmo
+  #   configuration_file: device_configurations/elmo_hip_90.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   8
+
+  # - type:               Elmo
+  #   name:               RightLegHipPitchElmo
+  #   configuration_file: device_configurations/elmo_hip_120.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   9
+
+  # - type:               Elmo
+  #   name:               RightLegKneeElmo
+  #   configuration_file: device_configurations/elmo_knee.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   10
+
+  # - type:               Elmo
+  #   name:               RightLegAnkleFEElmo
+  #   configuration_file: device_configurations/elmo_ankle.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   11
+
+  # - type:               Elmo
+  #   name:               RightLegAnkleAAElmo
+  #   configuration_file: device_configurations/elmo_ankle.yaml
+  #   ethercat_bus:       eno1
+  #   ethercat_address:   12

@@ -1,0 +1,46 @@
+ethercat_master:
+  time_step:                          0.001
+  update_rate_too_low_warn_threshold: 50
+
+ethercat_devices:
+  - type:               Elmo
+    name:               RightArmShouderPitchElmo
+    configuration_file: device_configurations/elmo_arm_70.yaml
+    ethercat_bus:       enp92s0
+    ethercat_address:   1
+
+  - type:               Elmo
+    name:               RightArmShouderRollElmo
+    configuration_file: device_configurations/elmo_arm_70.yaml
+    ethercat_bus:       enp92s0
+    ethercat_address:   2
+
+  - type:               Elmo
+    name:               RightArmShouderYawElmo
+    configuration_file: device_configurations/elmo_arm_70.yaml
+    ethercat_bus:       enp92s0
+    ethercat_address:   3
+
+  - type:               Elmo
+    name:               RightArmElbowPitchElmo
+    configuration_file: device_configurations/elmo_arm_70.yaml
+    ethercat_bus:       enp92s0
+    ethercat_address:   4
+  
+  - type:               Elmo
+    name:               RightArmElbowRollElmo
+    configuration_file: device_configurations/elmo_arm_50.yaml
+    ethercat_bus:       enp92s0
+    ethercat_address:   5
+
+  - type:               Elmo
+    name:               RightArmWristPitchElmo
+    configuration_file: device_configurations/elmo_arm_50.yaml
+    ethercat_bus:       enp92s0
+    ethercat_address:   6
+
+  - type:               Elmo
+    name:               RightArmWristYawElmo
+    configuration_file: device_configurations/elmo_arm_50.yaml
+    ethercat_bus:       enp92s0
+    ethercat_address:   7

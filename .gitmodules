@@ -1,0 +1,3 @@
+[submodule "nxdrvlinux"]
+	path = nxdrvlinux
+	url = git@github.com:crown133/nxdrvlinux.git
