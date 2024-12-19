@@ -7,8 +7,7 @@ add_definitions(-DMELO_USE_COUT)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 set(dependencies
-  message_logger
-  
+    message_logger
 )
 
 # find dependencies
@@ -33,9 +32,9 @@ target_link_libraries(${PROJECT_NAME}
                       pthread 
                       rt 
                       cifx  )
-# ament_target_dependencies(${PROJECT_NAME}
-#   ${dependencies}
-# )
+ament_target_dependencies(${PROJECT_NAME}
+  ${dependencies}
+)
 
 #############
 ## Install ##

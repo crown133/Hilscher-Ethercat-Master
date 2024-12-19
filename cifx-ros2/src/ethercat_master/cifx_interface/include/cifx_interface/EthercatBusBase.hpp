@@ -30,14 +30,19 @@
 #include <vector>
 #include <chrono>
 
-// soem
-#include <soem/ethercat.h>
+// cifx
+#include <cifx/cifxlinux.h>
+#include <cifx/cifxUser.h>
+#include <cifx/cifXEndianess.h>
 
-#include <message_logger/message_logger.hpp>
+#include <cifx/Hil_Packet.h>
+#include <cifx/Hil_SystemCmd.h>
+
+#include "message_logger/message_logger.hpp"
 
 // cifx_interface
-#include <cifx_interface/common/Macros.hpp>
-#include <cifx_interface/common/ThreadSleep.hpp>
+#include "cifx_interface/common/Macros.hpp"
+#include "cifx_interface/common/ThreadSleep.hpp"
 
 namespace cifx_interface {
 
@@ -57,9 +62,9 @@ class EthercatBusBase {
   EthercatBusBase() = delete;
   /*!
    * Constructor.
-   * @param name Name of the bus, e.g. "eth0".
+   * @param name Name of the bus, e.g. "cifx0".
    */
-  explicit EthercatBusBase(const std::string& name);
+  explicit EthercatBusBase(const std::string& name, bool verbose=false);
 
   /*!
    * Destructor.
@@ -73,13 +78,13 @@ class EthercatBusBase {
   const std::string& getName() const { return name_; }
 
   /*!
-   * Get the time of the last successful PDO reading.
+   * Get the time of the last successful IO/Data reading.
    * @return Stamp.
    */
   const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateReadStamp() const { return updateReadStamp_; }
 
   /*!
-   * Get the time of the last successful PDO writing.
+   * Get the time of the last successful IO/Data writing.
    * @return Stamp.
    */
   const std::chrono::time_point<std::chrono::high_resolution_clock>& getUpdateWriteStamp() const { return updateWriteStamp_; }
@@ -95,6 +100,14 @@ class EthercatBusBase {
    * Print all available busses.
    */
   static void printAvailableBusses();
+
+  /*!
+   * Function to display driver information
+   *   \param  hDriver  Handle to cifX driver
+   *   \param  ptVTable Pointer to cifX API function table
+   *   \return CIFX_NO_ERROR on success     
+   */
+  void DisplayDriverInformation();
 
   /*!
    * Check if this bus is available.
@@ -304,19 +317,6 @@ class EthercatBusBase {
   }
 
   /*!
-   * Get the PDO expected working counter.
-   * @param slave Address of the slave, 0 for all slaves.
-   * @return Expected working counter.
-   */
-  int getExpectedWorkingCounter(const uint16_t slave = 0) const;
-
-  /*!
-   * Check if the current working counter for all slaves is high enough.
-   * @return True if the working counter is equal or higher than expected.
-   */
-  bool workingCounterIsOk() const;
-
-  /*!
    * Check if the bus is ok.
    * @return True if bus is ok.
    */
@@ -349,20 +349,72 @@ class EthercatBusBase {
   }
 
  protected:
+
+  bool verbose_{false};
+
   //! Name of the bus.
   std::string name_;
 
   //! Whether the bus has been initialized successfully
   bool initlialized_{false};
 
+  //! cifx card driver Driver initialization structure 
+  /*!< see CIFX_DRIVER_INIT_XXX defines */
+  int init_options_ = CIFX_DRIVER_INIT_AUTOSCAN; 
+
+  /*!< base directory for device configuration */
+  const char* base_dir_ = nullptr; 
+
+  /*!< Poll interval in ms for non-irq cards   */
+  unsigned long poll_interval_ = 0; 
+
+  /*!< Poll thread priority */ 
+  int poll_priority_;  
+  
+  /*!< see TRACE_LVL_XXX defines in cifX Device Driver - Linux DRV 15 EN Page 33*/
+  // Trace Level = 0x00 Tracing disabled
+  // Trace Level = 0x01 Debug messages will be logged
+  // Trace Level = 0x02 Information messages will be logged
+  // Trace Level = 0x04 Warning messages will be logged
+  // Trace Level = 0x08 Errors messages will be logged
+  // Trace Level = 0xFF All messages will be logged
+  unsigned long trace_level_ = 0;    
+  
+  /*!< Number of user defined cards */
+  int user_card_cnt_; 
+
+  /*!< Pointer to Array of user cards (must be user_card_cnt long) */
+  struct CIFX_DEVICE_T* user_cards_ = nullptr;
+
+  int iCardNumber_;
+
+  int fEnableCardLocking_;
+  /*!< Stack size of polling thread */
+  int poll_StackSize_ = 0; //set to 0 to use default 
+
+  /*!< Schedule policy of poll thread          */
+  int poll_schedpolicy_ = SCHED_OTHER; // SCHED_FIFO SCHED_RR SCHED_OTHER 
+
+// Note: does not use dynamic memory allocation (new/delete). Therefore
+//   // all context pointers must be null or point to an existing member.
+  struct CIFX_LINUX_INIT cifx_init_ = {&init_options_,
+                                        base_dir_, 
+                                       &poll_interval_,
+                                       &poll_priority_,
+                                       &trace_level_,
+                                       &user_card_cnt_,
+                                        user_cards_, 
+                                       &iCardNumber_,
+                                       &fEnableCardLocking_, 
+                                       &poll_StackSize_,
+                                       &poll_schedpolicy_,
+                                       NULL};
+
   //! List of slaves.
   std::vector<EthercatSlaveBasePtr> slaves_;
 
   //! Bool indicating whether PDO data has been sent and not read yet.
   bool sentProcessData_{false};
-
-  //! Working counter of the most recent PDO.
-  std::atomic<int> wkc_;
 
   //! Time of the last successful PDO reading.
   std::chrono::time_point<std::chrono::high_resolution_clock> updateReadStamp_;
@@ -374,73 +426,79 @@ class EthercatBusBase {
   //! Time to sleep between the retries.
   const double ecatConfigRetrySleep_{1.0};
 
-  //! Count working counter too low in a row.
-  unsigned int workingCounterTooLowCounter_{0};
-  //! Maximal number of working counter to low.
-  const unsigned int maxWorkingCounterTooLow_{100};
-
   // EtherCAT input/output mapping of the slaves within the datagrams.
   char ioMap_[4096];
 
-  // EtherCAT context data elements:
+  //! Board Information structure                                     
+  char       abBoardName[CIFx_MAX_INFO_NAME_LENTH];        /*!< Global board name              */
+  char       abBoardAlias[CIFx_MAX_INFO_NAME_LENTH];       /*!< Global board alias name        */
+  uint32_t   ulBoardID;                                    /*!< Unique board ID, driver created*/
+  uint32_t   ulPhysicalAddress;                            /*!< Physical memory address        */
+  uint32_t   ulChannelCnt;                                 /*!< Number of available channels   */
 
-  // Port reference.
-  ecx_portt ecatPort_;
-  // List of slave data. Index 0 is reserved for the master, higher indices for the slaves.
-  ec_slavet ecatSlavelist_[EC_MAXSLAVE];
-  // Number of slaves found in the network.
-  int ecatSlavecount_{0};
-  // Slave group structure.
-  ec_groupt ecatGrouplist_[EC_MAXGROUP];
-  // Internal, reference to EEPROM cache buffer.
-  uint8 ecatEsiBuf_[EC_MAXEEPBUF];
-  // Internal, reference to EEPROM cache map.
-  uint32 ecatEsiMap_[EC_MAXEEPBITMAP];
-  // Internal, reference to error list.
-  ec_eringt ecatEList_;
-  // Internal, reference to processdata stack buffer info.
-  ec_idxstackT ecatIdxStack_;
-  // Boolean indicating if an error is available in error stack.
-  boolean ecatError_{FALSE};
-  // Reference to last DC time from slaves.
-  int64 ecatDcTime_{0};
-  // Internal, SM buffer.
-  ec_SMcommtypet ecatSmCommtype_[EC_MAX_MAPT];
-  // Internal, PDO assign list.
-  ec_PDOassignt ecatPdoAssign_[EC_MAX_MAPT];
-  // Internal, PDO description list.
-  ec_PDOdesct ecatPdoDesc_[EC_MAX_MAPT];
-  // Internal, SM list from EEPROM.
-  ec_eepromSMt ecatSm_;
-  // Internal, FMMU list from EEPROM.
-  ec_eepromFMMUt ecatFmmu_;
+  uint32_t   ulDeviceNumber;                               /*!< Global board device number     */
+  uint32_t   ulSerialNumber;                               /*!< Global board serial number     */
 
-  mutable std::recursive_mutex contextMutex_;
-  // EtherCAT context data.
-  // Note: SOEM does not use dynamic memory allocation (new/delete). Therefore
-  // all context pointers must be null or point to an existing member.
-  ecx_contextt ecatContext_ = {&ecatPort_,
-                               &ecatSlavelist_[0],
-                               &ecatSlavecount_,
-                               EC_MAXSLAVE,
-                               &ecatGrouplist_[0],
-                               EC_MAXGROUP,
-                               &ecatEsiBuf_[0],
-                               &ecatEsiMap_[0],
-                               0,
-                               &ecatEList_,
-                               &ecatIdxStack_,
-                               &ecatError_,
-                              //  0,
-                              //  0,
-                               &ecatDcTime_,
-                               &ecatSmCommtype_[0],
-                               &ecatPdoAssign_[0],
-                               &ecatPdoDesc_[0],
-                               &ecatSm_,
-                               &ecatFmmu_,
-                               nullptr};
-};
+//   // EtherCAT context data elements:
+
+//   // Port reference.
+//   ecx_portt ecatPort_;
+//   // List of slave data. Index 0 is reserved for the master, higher indices for the slaves.
+//   ec_slavet ecatSlavelist_[EC_MAXSLAVE];
+//   // Number of slaves found in the network.
+//   int ecatSlavecount_{0};
+//   // Slave group structure.
+//   ec_groupt ecatGrouplist_[EC_MAXGROUP];
+//   // Internal, reference to EEPROM cache buffer.
+//   uint8 ecatEsiBuf_[EC_MAXEEPBUF];
+//   // Internal, reference to EEPROM cache map.
+//   uint32 ecatEsiMap_[EC_MAXEEPBITMAP];
+//   // Internal, reference to error list.
+//   ec_eringt ecatEList_;
+//   // Internal, reference to processdata stack buffer info.
+//   ec_idxstackT ecatIdxStack_;
+//   // Boolean indicating if an error is available in error stack.
+//   boolean ecatError_{FALSE};
+//   // Reference to last DC time from slaves.
+//   int64 ecatDcTime_{0};
+//   // Internal, SM buffer.
+//   ec_SMcommtypet ecatSmCommtype_[EC_MAX_MAPT];
+//   // Internal, PDO assign list.
+//   ec_PDOassignt ecatPdoAssign_[EC_MAX_MAPT];
+//   // Internal, PDO description list.
+//   ec_PDOdesct ecatPdoDesc_[EC_MAX_MAPT];
+//   // Internal, SM list from EEPROM.
+//   ec_eepromSMt ecatSm_;
+//   // Internal, FMMU list from EEPROM.
+//   ec_eepromFMMUt ecatFmmu_;
+
+//   mutable std::recursive_mutex contextMutex_;
+//   // EtherCAT context data.
+//   // Note: SOEM does not use dynamic memory allocation (new/delete). Therefore
+//   // all context pointers must be null or point to an existing member.
+  // ecx_contextt ecatContext_ = {&ecatPort_,
+//                                &ecatSlavelist_[0],
+//                                &ecatSlavecount_,
+//                                EC_MAXSLAVE,
+//                                &ecatGrouplist_[0],
+//                                EC_MAXGROUP,
+//                                &ecatEsiBuf_[0],
+//                                &ecatEsiMap_[0],
+//                                0,
+//                                &ecatEList_,
+//                                &ecatIdxStack_,
+//                                &ecatError_,
+//                               //  0,
+//                               //  0,
+//                                &ecatDcTime_,
+//                                &ecatSmCommtype_[0],
+//                                &ecatPdoAssign_[0],
+//                                &ecatPdoDesc_[0],
+//                                &ecatSm_,
+//                                &ecatFmmu_,
+//                                nullptr};
+
+}; //class EthercatBusBase
 
 using EthercatBusBasePtr = std::shared_ptr<EthercatBusBase>;
 
@@ -467,4 +525,5 @@ bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint1
    */
 template<>
 bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value);
+
 }  // namespace cifx_interface

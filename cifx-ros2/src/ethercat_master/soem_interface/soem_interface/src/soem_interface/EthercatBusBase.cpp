@@ -286,6 +286,7 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
   MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
 }
 
+
 bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, const unsigned int maxRetries, const double retrySleep) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);

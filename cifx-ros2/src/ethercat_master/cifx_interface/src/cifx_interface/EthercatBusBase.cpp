@@ -25,40 +25,144 @@
 
 namespace cifx_interface {
 
-EthercatBusBase::EthercatBusBase(const std::string& name) : name_(name), wkc_(0) {
-  // Initialize all SOEM context data pointers that are not used with null.
-  ecatContext_.elist->head = 0;
-  ecatContext_.elist->tail = 0;
-  ecatContext_.port->stack.sock = nullptr;
-  ecatContext_.port->stack.txbuf = nullptr;
-  ecatContext_.port->stack.txbuflength = nullptr;
-  ecatContext_.port->stack.tempbuf = nullptr;
-  ecatContext_.port->stack.rxbuf = nullptr;
-  ecatContext_.port->stack.rxbufstat = nullptr;
-  ecatContext_.port->stack.rxsa = nullptr;
-  ecatContext_.port->redport = nullptr;
-  //  ecatContext_.idxstack->data = nullptr; // This does not compile since SOEM uses a fixed size array of void pointers.
-  ecatContext_.FOEhook = nullptr;
+EthercatBusBase::EthercatBusBase(const std::string& name, bool verbose) : name_(name), 
+                                                                          verbose_(verbose) {
+  // Initialize all data pointers that are not used with null.
+
+  if(verbose_) {
+    trace_level_ = 255;
+  }
 }
 
 bool EthercatBusBase::busIsAvailable(const std::string& name) {
-  ec_adaptert* adapter = ec_find_adapters();
-  while (adapter != nullptr) {
-    if (name == std::string(adapter->name)) {
+  CIFXHANDLE hDriver = NULL;
+  int32_t    lRet    = xDriverOpen(&hDriver);
+
+  printf("---------- Board Checking ----------\r\n");
+
+  if(CIFX_NO_ERROR == lRet)
+  {
+    /* Driver/Toolkit successfully opened */
+    unsigned long     ulBoard    = 0;
+    BOARD_INFORMATION tBoardInfo = {0};
+
+    /* Iterate over all boards */
+    while(CIFX_NO_ERROR == xDriverEnumBoards(hDriver, ulBoard, sizeof(tBoardInfo), &tBoardInfo))
+    {
+      if(tBoardInfo.abBoardName == name) {
+      printf("Found Board %s\r\n", tBoardInfo.abBoardName);
+      if(strlen( (char*)tBoardInfo.abBoardAlias) != 0)
+        printf(" Alias        : %s\r\n", tBoardInfo.abBoardAlias);
+
+      printf(" DeviceNumber : %lu\r\n",(long unsigned int)tBoardInfo.tSystemInfo.ulDeviceNumber);
+      printf(" SerialNumber : %lu\r\n",(long unsigned int)tBoardInfo.tSystemInfo.ulSerialNumber);
+      printf(" Board ID     : %lu\r\n",(long unsigned int)tBoardInfo.ulBoardID);
+      printf(" System Error : 0x%08lX\r\n",(long unsigned int)tBoardInfo.ulSystemError);
+      printf(" Channels     : %lu\r\n",(long unsigned int)tBoardInfo.ulChannelCnt);
+      printf(" DPM Size     : %lu\r\n",(long unsigned int)tBoardInfo.ulDpmTotalSize);
       return true;
+      }
+      ++ulBoard;
     }
-    adapter = adapter->next;
+
+    /* close previously opened driver */
+    xDriverClose(hDriver);
   }
+
   return false;
 }
 
 void EthercatBusBase::printAvailableBusses() {
-  MELO_INFO_STREAM("Available adapters:");
-  ec_adaptert* adapter = ec_find_adapters();
-  while (adapter != nullptr) {
-    MELO_INFO_STREAM("- Name: '" << adapter->name << "', description: '" << adapter->desc << "'");
-    adapter = adapter->next;
+    CIFXHANDLE hDriver = NULL;
+  int32_t    lRet    = xDriverOpen(&hDriver);
+
+  printf("---------- Board/Channel enumeration demo ----------\r\n");
+
+  if(CIFX_NO_ERROR == lRet)
+  {
+    /* Driver/Toolkit successfully opened */
+    unsigned long     ulBoard    = 0;
+    BOARD_INFORMATION tBoardInfo = {0};
+
+    /* Iterate over all boards */
+    while(CIFX_NO_ERROR == xDriverEnumBoards(hDriver, ulBoard, sizeof(tBoardInfo), &tBoardInfo))
+    {
+      printf("Found Board %s\r\n", tBoardInfo.abBoardName);
+      if(strlen( (char*)tBoardInfo.abBoardAlias) != 0)
+        printf(" Alias        : %s\r\n", tBoardInfo.abBoardAlias);
+
+      printf(" DeviceNumber : %lu\r\n",(long unsigned int)tBoardInfo.tSystemInfo.ulDeviceNumber);
+      printf(" SerialNumber : %lu\r\n",(long unsigned int)tBoardInfo.tSystemInfo.ulSerialNumber);
+      printf(" Board ID     : %lu\r\n",(long unsigned int)tBoardInfo.ulBoardID);
+      printf(" System Error : 0x%08lX\r\n",(long unsigned int)tBoardInfo.ulSystemError);
+      printf(" Channels     : %lu\r\n",(long unsigned int)tBoardInfo.ulChannelCnt);
+      printf(" DPM Size     : %lu\r\n",(long unsigned int)tBoardInfo.ulDpmTotalSize);
+
+      unsigned long       ulChannel    = 0;
+      CHANNEL_INFORMATION tChannelInfo = {{0}};
+
+      /* iterate over all channels on the current board */
+      while(CIFX_NO_ERROR == xDriverEnumChannels(hDriver, ulBoard, ulChannel, sizeof(tChannelInfo), &tChannelInfo))
+      {
+        printf(" - Channel %lu:\r\n", ulChannel);
+        printf("    Firmware : %s\r\n", tChannelInfo.abFWName);
+        printf("    Version  : %u.%u.%u build %u\r\n", 
+               tChannelInfo.usFWMajor,
+               tChannelInfo.usFWMinor,
+               tChannelInfo.usFWRevision,
+               tChannelInfo.usFWBuild);
+        printf("    Date     : %02u/%02u/%04u\r\n", 
+               tChannelInfo.bFWMonth,
+               tChannelInfo.bFWDay,
+               tChannelInfo.usFWYear);
+
+        printf("  Device Nr. : %lu\r\n",(long unsigned int)tChannelInfo.ulDeviceNumber);
+        printf("  Serial Nr. : %lu\r\n",(long unsigned int)tChannelInfo.ulSerialNumber);
+        printf("  netX Flags : 0x%08X\r\n", tChannelInfo.ulNetxFlags);
+        printf("  Host Flags : 0x%08X\r\n", tChannelInfo.ulHostFlags);
+        printf("  Host COS   : 0x%08X\r\n", tChannelInfo.ulHostCOSFlags);
+        printf("  Device COS : 0x%08X\r\n", tChannelInfo.ulDeviceCOSFlags);
+
+        ++ulChannel;
+      }
+
+      ++ulBoard;
+    }
+
+    /* close previously opened driver */
+    xDriverClose(hDriver);
   }
+
+  printf(" State = 0x%08X\r\n", (unsigned int)lRet);
+  printf("----------------------------------------------------\r\n");
+
+  return lRet;
+}
+
+void EthercatBusBase::DisplayDriverInformation (void)
+{
+  int32_t            lRet             = CIFX_NO_ERROR;
+  DRIVER_INFORMATION tDriverInfo      = {{0}};
+  char               szDrvVersion[32] = "";
+  CIFXHANDLE         hDriver          = NULL;
+ 
+  if (CIFX_NO_ERROR == (lRet = xDriverOpen(&hDriver)))
+  {
+    printf("\n---------- Display Driver Version ----------\n");
+    if( CIFX_NO_ERROR != (lRet = xDriverGetInformation(hDriver, sizeof(tDriverInfo), &tDriverInfo)) )
+      ShowError( lRet);
+    else if ( CIFX_NO_ERROR != (lRet = cifXGetDriverVersion( sizeof(szDrvVersion)/sizeof(*szDrvVersion), szDrvVersion)))
+      ShowError( lRet);
+    else
+      printf("Driver Version: %s, based on %.32s \n\n", szDrvVersion, tDriverInfo.abDriverVersion);
+    
+    /* close previously opened driver */
+    xDriverClose(hDriver);
+    
+  } 
+  
+  printf(" State = 0x%08X\r\n", (unsigned int)lRet);
+  printf("----------------------------------------------------\r\n");
 }
 
 bool EthercatBusBase::busIsAvailable() const { return busIsAvailable(name_); }
@@ -91,113 +195,124 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
    * will open a second port as backup. You can send NULL as ifname if you have a
    * dedicated NIC selected in the nicdrv.c. It returns >0 if succeeded.
    */
-  if (!busIsAvailable()) {
-    MELO_ERROR_STREAM("[" << getName() << "] "
-                          << "Bus is not available.");
-    printAvailableBusses();
-    return false;
-  }
-  if (ecx_init(&ecatContext_, name_.c_str()) <= 0) {
-    MELO_ERROR_STREAM("[" << getName() << "] "
-                          << "No socket connection. Execute as root.");
-    return false;
-  }
-
-  // Initialize SOEM.
-  // Note: ecx_config_init(..) requests the slaves to go to PRE-OP.
-  for (unsigned int retry = 0; retry <= ecatConfigMaxRetries_; retry++) {
-    if (ecx_config_init(&ecatContext_, FALSE) > 0) {
-      // Successful initialization.
-      break;
-    } else if (retry == ecatConfigMaxRetries_) {
-      // Too many failed attempts.
+  if(CIFX_NO_ERROR == cifXDriverInit(&cifx_init_))
+  {
+    if(verbose_)
+    {
+      DisplayDriverInformation();
+    }
+    if (!busIsAvailable()) {
       MELO_ERROR_STREAM("[" << getName() << "] "
-                            << "No slaves have been found.");
+                            << "Bus is not available.");
+      printAvailableBusses();
       return false;
     }
-    // Sleep and retry.
-    cifx_interface::threadSleep(ecatConfigRetrySleep_);
-    MELO_INFO_STREAM("No slaves have been found, retrying " << retry + 1 << "/" << ecatConfigMaxRetries_ << " ...");
-  }
-
-  // Print the slaves which have been detected.
-  MELO_INFO_STREAM("The following " << getNumberOfSlaves() << " slaves have been found and configured:");
-  for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
-    MELO_INFO_STREAM("Address: " << slave << " - Name: '" << std::string(ecatContext_.slavelist[slave].name) << "'");
-  }
-
-  // Check if the given slave addresses are valid.
-  bool slaveAddressesAreOk = true;
-  for (const auto& slave : slaves_) {
-    auto address = static_cast<int>(slave->getAddress());
-    if (address == 0) {
+    if (ecx_init(&ecatContext_, name_.c_str()) <= 0) {
       MELO_ERROR_STREAM("[" << getName() << "] "
-                            << "Slave '" << slave->getName() << "': Invalid address " << address << ".");
-      slaveAddressesAreOk = false;
-    }
-    if (address > getNumberOfSlaves()) {
-      MELO_ERROR_STREAM("[" << getName() << "] "
-                            << "Slave '" << slave->getName() << "': Invalid address " << address << ", "
-                            << "only " << getNumberOfSlaves() << " slave(s) found.");
-      slaveAddressesAreOk = false;
-    }
-  }
-  if (!slaveAddressesAreOk) {
-    return false;
-  }
-
-  // Disable symmetrical transfers.
-  ecatContext_.grouplist[0].blockLRW = 1;
-
-  // Initialize the communication interfaces of all slaves.
-  for (auto& slave : slaves_) {
-    if (!slave->startup()) {
-      MELO_ERROR_STREAM("[" << getName() << "] "
-                            << "Slave '" << slave->getName() << "' was not initialized successfully.");
+                            << "No socket connection. Execute as root.");
       return false;
     }
-  }
 
-  // Set up the communication IO mapping.
-  // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
-  ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+    // Initialize SOEM.
+    // Note: ecx_config_init(..) requests the slaves to go to PRE-OP.
+    for (unsigned int retry = 0; retry <= ecatConfigMaxRetries_; retry++) {
+      if (ecx_config_init(&ecatContext_, FALSE) > 0) {
+        // Successful initialization.
+        break;
+      } else if (retry == ecatConfigMaxRetries_) {
+        // Too many failed attempts.
+        MELO_ERROR_STREAM("[" << getName() << "] "
+                              << "No slaves have been found.");
+        return false;
+      }
+      // Sleep and retry.
+      cifx_interface::threadSleep(ecatConfigRetrySleep_);
+      MELO_INFO_STREAM("No slaves have been found, retrying " << retry + 1 << "/" << ecatConfigMaxRetries_ << " ...");
+    }
 
-  // Check if the size of the IO mapping fits our slaves.
-  bool ioMapIsOk = true;
-  // do this check only if 'sizeCheck' is true
-  if (sizeCheck) {
+    // Print the slaves which have been detected.
+    MELO_INFO_STREAM("The following " << getNumberOfSlaves() << " slaves have been found and configured:");
+    for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
+      MELO_INFO_STREAM("Address: " << slave << " - Name: '" << std::string(ecatContext_.slavelist[slave].name) << "'");
+    }
+
+    // Check if the given slave addresses are valid.
+    bool slaveAddressesAreOk = true;
     for (const auto& slave : slaves_) {
-      const EthercatSlaveBase::PdoInfo pdoInfo = slave->getCurrentPdoInfo();
-      if (pdoInfo.rxPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Obytes) {
+      auto address = static_cast<int>(slave->getAddress());
+      if (address == 0) {
         MELO_ERROR_STREAM("[" << getName() << "] "
-                              << "RxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.rxPdoSize_
-                              << " bytes but the slave found at its address " << slave->getAddress() << " requests "
-                              << ecatContext_.slavelist[slave->getAddress()].Obytes << " bytes).");
-        ioMapIsOk = false;
+                              << "Slave '" << slave->getName() << "': Invalid address " << address << ".");
+        slaveAddressesAreOk = false;
       }
-      if (pdoInfo.txPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Ibytes) {
+      if (address > getNumberOfSlaves()) {
         MELO_ERROR_STREAM("[" << getName() << "] "
-                              << "TxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.txPdoSize_
-                              << " bytes but the slave found at its address " << slave->getAddress() << " requests "
-                              << ecatContext_.slavelist[slave->getAddress()].Ibytes << " bytes).");
-        ioMapIsOk = false;
+                              << "Slave '" << slave->getName() << "': Invalid address " << address << ", "
+                              << "only " << getNumberOfSlaves() << " slave(s) found.");
+        slaveAddressesAreOk = false;
       }
     }
+    if (!slaveAddressesAreOk) {
+      return false;
+    }
+
+    // Disable symmetrical transfers.
+    ecatContext_.grouplist[0].blockLRW = 1;
+
+    // Initialize the communication interfaces of all slaves.
+    for (auto& slave : slaves_) {
+      if (!slave->startup()) {
+        MELO_ERROR_STREAM("[" << getName() << "] "
+                              << "Slave '" << slave->getName() << "' was not initialized successfully.");
+        return false;
+      }
+    }
+
+    // Set up the communication IO mapping.
+    // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
+    ecx_config_map_group(&ecatContext_, &ioMap_, 0);
+
+    // Check if the size of the IO mapping fits our slaves.
+    bool ioMapIsOk = true;
+    // do this check only if 'sizeCheck' is true
+    if (sizeCheck) {
+      for (const auto& slave : slaves_) {
+        const EthercatSlaveBase::PdoInfo pdoInfo = slave->getCurrentPdoInfo();
+        if (pdoInfo.rxPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Obytes) {
+          MELO_ERROR_STREAM("[" << getName() << "] "
+                                << "RxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.rxPdoSize_
+                                << " bytes but the slave found at its address " << slave->getAddress() << " requests "
+                                << ecatContext_.slavelist[slave->getAddress()].Obytes << " bytes).");
+          ioMapIsOk = false;
+        }
+        if (pdoInfo.txPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Ibytes) {
+          MELO_ERROR_STREAM("[" << getName() << "] "
+                                << "TxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.txPdoSize_
+                                << " bytes but the slave found at its address " << slave->getAddress() << " requests "
+                                << ecatContext_.slavelist[slave->getAddress()].Ibytes << " bytes).");
+          ioMapIsOk = false;
+        }
+      }
+    }
+    if (!ioMapIsOk) {
+      return false;
+    }
+
+    // Initialize the memory with zeroes.
+    for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
+      memset(ecatContext_.slavelist[slave].inputs, 0, ecatContext_.slavelist[slave].Ibytes);
+      memset(ecatContext_.slavelist[slave].outputs, 0, ecatContext_.slavelist[slave].Obytes);
+    }
+
+    workingCounterTooLowCounter_ = 0;
+    initlialized_ = true;
+
+    return true;
   }
-  if (!ioMapIsOk) {
+  else
+  {
     return false;
   }
-
-  // Initialize the memory with zeroes.
-  for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
-    memset(ecatContext_.slavelist[slave].inputs, 0, ecatContext_.slavelist[slave].Ibytes);
-    memset(ecatContext_.slavelist[slave].outputs, 0, ecatContext_.slavelist[slave].Obytes);
-  }
-
-  workingCounterTooLowCounter_ = 0;
-  initlialized_ = true;
-
-  return true;
 }
 
 void EthercatBusBase::updateRead() {
