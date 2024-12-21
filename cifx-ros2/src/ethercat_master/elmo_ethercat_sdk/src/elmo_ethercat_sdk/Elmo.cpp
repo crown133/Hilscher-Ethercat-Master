@@ -49,8 +49,11 @@ std::string binstring(int8_t var) {
   return s;
 }
 
-Elmo::SharedPtr Elmo::deviceFromFile(const std::string& configFile, const std::string& name, const uint32_t address) {
-  auto elmo = std::make_shared<Elmo>(name, address);
+Elmo::SharedPtr Elmo::deviceFromFile(const std::string& configFile, 
+                                     const std::string& name, 
+                                     const uint32_t address,
+                                     const uint32_t stationAddress) {
+  auto elmo = std::make_shared<Elmo>(name, address, stationAddress);
   if (!elmo->loadConfigFile(configFile)) {
     MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::deviceFromFile] loading config file '" << configFile << "' for '" << name
                                                                                        << "' not successful.");
@@ -59,15 +62,18 @@ Elmo::SharedPtr Elmo::deviceFromFile(const std::string& configFile, const std::s
   return elmo;
 }
 
-Elmo::Elmo(const std::string& name, const uint32_t address) {
+Elmo::Elmo(const std::string& name, const uint32_t address, const uint32_t stationAddress) {
   address_ = address;
+  station_address_ = stationAddress;
   name_ = name;
 }
 
 bool Elmo::startup() {
   bool success = true;
+  //todo: set the slave state to EC_STATE_PRE_OP
   success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
-  bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_ / 2.f);
+  // todo: note the dc shift time which was configured in syscon.net
+  // bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_ / 2.f);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   // use hardware motor rated current value if necessary
@@ -80,8 +86,10 @@ bool Elmo::startup() {
     reading_.configureReading(configuration_);
   }
   success &= setDriveStateViaSdo(DriveState::ReadyToSwitchOn);
-  // PDO mapping
-  success &= mapPdos(configuration_.rxPdoTypeEnum, configuration_.txPdoTypeEnum);
+
+  // PDO mapping // which has been set by netx firmware
+  // success &= mapPdos(configuration_.rxPdoTypeEnum, configuration_.txPdoTypeEnum);
+
   // Set initial mode of operation
   success &= sdoVerifyWrite(OD_INDEX_MODES_OF_OPERATION, 0, false, static_cast<int8_t>(configuration_.modeOfOperationEnum),
                             configuration_.configRunSdoVerifyTimeout);
@@ -101,17 +109,6 @@ bool Elmo::startup() {
   uint16_t actual5vVoltage = 5000;
   success &= sendSdoRead(OD_INDEX_5VDC_SUPPLY, 0, false, actual5vVoltage);  // [mV]
   actual5vVoltage_ = static_cast<double>(actual5vVoltage) / 1000.0;         // [V]
-
-    // success &= sendSdoWrite(OD_INDEX_POSITION_RANGE_LIMIT, 1, false, -65536);
-    // success &= sendSdoWrite(OD_INDEX_POSITION_RANGE_LIMIT, 2, false,  65536);
-
-    // success &= sendSdoWrite(OD_INDEX_SOFTWARE_POSITION_LIMIT, 1, false, -65536);
-    // success &= sendSdoWrite(OD_INDEX_SOFTWARE_POSITION_LIMIT, 2, false,  65536);
-
-    // success &= sendSdoWrite(OD_INDEX_MAX_ACCELERATION, 0, false,  30000);
-    // success &= sendSdoWrite(OD_INDEX_MAX_DECELERATION, 0, false,  30000);
-    // success &= sendSdoWrite(OD_INDEX_PROFILE_VELOCITY, 0, false,  10000);
-  
 
   if (!success) {
     MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::preStartupOnlineConfiguration] hardware configuration of '" << name_
@@ -802,9 +799,23 @@ Controlword Elmo::getNextStateTransitionControlword(const DriveState& requestedD
 }
 
 void Elmo::autoConfigurePdoSizes() {
-  auto pdoSizes = bus_->getHardwarePdoSizes(static_cast<uint16_t>(address_));
-  pdoInfo_.rxPdoSize_ = pdoSizes.first;
-  pdoInfo_.txPdoSize_ = pdoSizes.second;
+  // auto pdoSizes = bus_->getHardwarePdoSizes(static_cast<uint16_t>(address_)); 
+  // TODO: auto config pdo sizes from bus rather than yaml file
+  if(configuration_.rxPdoTypeEnum == RxPdoTypeEnum::RxPdoStandard) {
+    pdoInfo_.rxPdoSize_ = sizeof(RxPdoStandard);
+  } else if(configuration_.rxPdoTypeEnum == RxPdoTypeEnum::RxPdoCST) {
+    pdoInfo_.rxPdoSize_ = sizeof(RxPdoCST);
+  } else {
+    MELO_ERROR_STREAM("Elmo " << name_ << " have no configuration for RxPdoTypeEnum " << configuration_.rxPdoTypeEnum);
+  }
+  
+  if(configuration_.TxPdoTypeEnum == TxPdoTypeEnum::TxPdoStandard) {
+    pdoInfo_.txPdoSize_ = sizeof(TxPdoStandard);
+  } else if(configuration_.TxPdoTypeEnum == TxPdoTypeEnum::TxPdoCST) {
+    pdoInfo_.txPdoSize_ = sizeof(TxPdoCST);
+  } else {
+    MELO_ERROR_STREAM("Elmo " << name_ << " have no configuration for TxPdoTypeEnum " << configuration_.TxPdoTypeEnum);
+  }
 }
 
 uint16_t Elmo::getTxPdoSize() {

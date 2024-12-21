@@ -213,6 +213,15 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             {
                 throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_bus_address");
             }
+            
+            if(child["station_adderss"])
+            {
+                entry.station_address = child["station_address"].as<int>();
+            }
+            else
+            {
+                throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_bus_address");
+            }
 
             //ethercat_bus - entry
             if(child["ethercat_bus"])

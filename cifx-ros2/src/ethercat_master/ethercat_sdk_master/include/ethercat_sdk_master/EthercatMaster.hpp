@@ -18,7 +18,7 @@
 #include "ethercat_sdk_master/EthercatMasterConfiguration.hpp"
 #include "ethercat_sdk_master/UpdateMode.hpp"
 
-#include <soem_interface/EthercatBusBase.hpp>
+#include <cifx_interface/EthercatBusBase.hpp>
 
 #include <memory>
 #include <vector>
@@ -42,7 +42,7 @@ public:
   EthercatMaster() = default;
 
   /*!
-   * Initialize the soem_interface::EthercatBusBase bus_ object.
+   * Initialize the cifx_interface::EthercatBusBase bus_ object.
    */
   void createEthercatBus();
 
@@ -95,7 +95,7 @@ public:
   /*!
    * Returns a raw pointer to the bus_ object.
    */
-  soem_interface::EthercatBusBase* getBusPtr() { return bus_.get(); }
+  cifx_interface::EthercatBusBase* getBusPtr() { return bus_.get(); }
 
 
 // Configuration
@@ -147,7 +147,7 @@ public:
   void resetUpdateScheduler() { firstUpdate_ = true; }
 
 protected:
-  std::unique_ptr<soem_interface::EthercatBusBase> bus_{nullptr};
+  std::unique_ptr<cifx_interface::EthercatBusBase> bus_{nullptr};
   std::vector<EthercatDevice::SharedPtr> devices_;
   EthercatMasterConfiguration configuration_;
   unsigned int rateTooLowCounter_{0};

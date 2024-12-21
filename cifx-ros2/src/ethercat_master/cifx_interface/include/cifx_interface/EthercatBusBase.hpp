@@ -46,6 +46,8 @@
 
 namespace cifx_interface {
 
+#define MAX_SDO_SIZE 32 // n bytes
+
 // forward declaration for EthercatSlaveBase
 class EthercatSlaveBase;
 using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;
@@ -153,14 +155,14 @@ class EthercatBusBase {
   /*!
    * Set the desired EtherCAT state machine state.
    * @param state Desired state.
-   * @param slave Address of the slave, 0 for all slaves.
+   * @param slave Address of the slave, 0 for master.
    */
   void setState(const uint16_t state, const uint16_t slave = 0);
 
   /*!
    * Wait for an EtherCAT state machine state to be reached.
    * @param state      Desired state.
-   * @param slave      Address of the slave, 0 for all slaves.
+   * @param slave      Address of the slave, 0 for master.
    * @param maxRetries Maximum number of retries.
    * @param retrySleep Duration to sleep between the retries.
    * @return True if the state has been reached within the timeout.
@@ -232,18 +234,38 @@ class EthercatBusBase {
   bool sendSdoWrite(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const Value value) {
     assert(static_cast<int>(slave) <= getNumberOfSlaves());
     const int size = sizeof(Value);
-    Value valueCopy = value;  // copy value to make it modifiable
-    int wkc = 0;
+
+    ECM_IF_COE_SDO_DOWNLOAD_REQ_T sdoWriteReq;
+    sdoWriteReq.tHead.ulDest = 0x20;
+    sdoWriteReq.tHead.ulLen = 18 + size;
+    sdoWriteReq.tHead.ulCmd = ECM_IF_CMD_COE_SDO_DOWNLOAD_REQ;
+    sdoWriteReq.tData.usStationAddress = slaves_[slave]->getStationAddress();
+    sdoWriteReq.tData.usTransportType = 0;
+    sdoWriteReq.tData.usObjIndex = index;
+    if(completeAccess) {
+      sdoWriteReq.tData.bSubIndex = 0x00;  // TODO: check DS402; 0 or 1?
+    } else {
+      sdoWriteReq.tData.bSubIndex = subindex;
+    }
+    sdoWriteReq.tData.fCompleteAccess = static_cast<boolean>(completeAccess);
+    sdoWriteReq.tData.ulTotalBytes = size;
+    sdoWriteReq.tData.ulTimeoutMs = 10;
+    sdoWriteReq.tData.abData = &value;
+    if(CIFX_NO_ERROR != xChannelPutPacket(hChannel, &sdoWriteReq, 10))
     {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &valueCopy, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for writing SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
+      MELO_ERROR_STREAM("Error sending packet to device!");
       return false;
+    } else
+    {
+      ECM_IF_COE_SDO_DOWNLOAD_CNF_T sdoWriteCnf;
+
+      if(CIFX_NO_ERROR != xChannelGetPacket(hChannel, sizeof(sdoWriteCnf), &sdoWriteCnf, 20))
+      {
+        MELO_ERROR_STREAM("Error getting packet from device!");
+        return false;
+      } 
     }
+
     return true;
   }
 
@@ -260,63 +282,46 @@ class EthercatBusBase {
   bool sendSdoRead(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, Value& value) {
     assert(static_cast<int>(slave) <= getNumberOfSlaves());
     int size = sizeof(Value);
-    int wkc = 0;
-    {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, &value, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
-    if (size != sizeof(Value)) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " << sizeof(Value) << " bytes, read " << size
-                                 << " bytes) for reading SDO (ID: 0x" << std::setfill('0') << std::setw(4) << std::hex << index
-                                 << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
-    return true;
-  }
 
-  /**
-   * Send a special reading SDO to read SDOs of type visible string.
-   * @param slave          Address of the slave.
-   * @param index          Index of the SDO.
-   * @param subindex       Sub-index of the SDO.
-   * @param value          Return argument, will contain the value which was read.
-   * @return True if successful.
-   */
-  bool sendSdoReadVisibleString(const uint16_t slave, const uint16_t index, const uint8_t subindex, std::string& value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    char buffer[128];
-    int length = sizeof(buffer) - 1;
-    int wkc = 0;
+    ECM_IF_COE_SDO_UPLOAD_REQ_T sdoReadReq;
+    sdoReadReq.tHead.ulDest = 0x20;
+    sdoReadReq.tHead.ulLen = 18;
+    sdoReadReq.tHead.ulCmd = ECM_IF_CMD_COE_SDO_UPLOAD_REQ;
+    sdoReadReq.tData.usStationAddress = slaves_[slave]->getStationAddress();
+    sdoReadReq.tData.usTransportType = 0;
+    sdoReadReq.tData.usObjIndex = index;
+    if(completeAccess) {
+      sdoReadReq.tData.bSubIndex = 0x00;  // TODO: check DS402; 0 or 1?
+    } else {
+      sdoReadReq.tData.bSubIndex = subindex;
+    }
+    sdoReadReq.tData.fCompleteAccess = static_cast<boolean>(completeAccess);
+    sdoReadReq.tData.ulTimeoutMs = 10;
+    sdoReadReq.tData.ulMaxTotalBytes = MAX_SDO_SIZE;
+    if(CIFX_NO_ERROR != xChannelPutPacket(hChannel, &sdoReadReq, 10))
     {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(false), &length, &buffer, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
+      MELO_ERROR_STREAM("Error sending packet to device!");
       return false;
-    }
-    value.clear();
-    for (int i = 0; i < length; ++i) {
-      MELO_DEBUG_STREAM("Char      : " << buffer[i])
-      MELO_DEBUG_STREAM("Char (int): " << static_cast<unsigned int>(buffer[i]))
-      if (buffer[i] != 0x0) {
-        value += buffer[i];
-      } else {
-        break;
+    } else
+    {
+      ECM_IF_COE_SDO_UPLOAD_CNF_T sdoReadCnf;
+      if(CIFX_NO_ERROR != xChannelGetPacket(hChannel, sizeof(sdoReadCnf), &sdoReadCnf, 20))
+      {
+        MELO_ERROR_STREAM("Error getting packet from device!");
+        return false;
+      } 
+      if(sdoReadCnf.tData.usStationAddress != slaves_[slave]->getStationAddress())
+      {
+        MELO_ERROR_STREAM("Wrong SDO Returned Station Address!");
+        return false;
       }
+      memcpy(&value, sdoReadCnf.tData.abData, sdoReadReq.tData.ulTotalBytes);
     }
+
     return true;
   }
 
-  /*!
+   /*!
    * Check if the bus is ok.
    * @return True if bus is ok.
    */
@@ -354,6 +359,9 @@ class EthercatBusBase {
 
   //! Name of the bus.
   std::string name_;
+  
+  CIFXHANDLE hDriver = NULL;
+  CIFXHANDLE hChannel = NULL;
 
   //! Whether the bus has been initialized successfully
   bool initlialized_{false};
@@ -428,6 +436,8 @@ class EthercatBusBase {
 
   // EtherCAT input/output mapping of the slaves within the datagrams.
   char ioMap_[4096];
+  std::shared_ptr<unsigned char[]> ioRecvData_(new unsigned char[4096]);
+  std::shared_ptr<unsigned char[]> ioSendData_(new unsigned char[4096]);
 
   //! Board Information structure                                     
   char       abBoardName[CIFx_MAX_INFO_NAME_LENTH];        /*!< Global board name              */
@@ -502,28 +512,28 @@ class EthercatBusBase {
 
 using EthercatBusBasePtr = std::shared_ptr<EthercatBusBase>;
 
-/*!
- * Send a reading SDO - specialization for strings
- * @param slave          Address of the slave.
- * @param index          Index of the SDO.
- * @param subindex       Sub-index of the SDO.
- * @param completeAccess Access all sub-indices at once.
- * @param value          Return argument, will contain the value which was read. The string needs to be preallocated to the correct size!
- * @return True if successful.
- */
-template<>
-bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value);
+// /*!
+//  * Send a reading SDO - specialization for strings
+//  * @param slave          Address of the slave.
+//  * @param index          Index of the SDO.
+//  * @param subindex       Sub-index of the SDO.
+//  * @param completeAccess Access all sub-indices at once.
+//  * @param value          Return argument, will contain the value which was read. The string needs to be preallocated to the correct size!
+//  * @return True if successful.
+//  */
+// template<>
+// bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value);
 
-/*!
-   * Send a writing SDO - specialization for strings
-   * @param slave          Address of the slave.
-   * @param index          Index of the SDO.
-   * @param subindex       Sub-index of the SDO.
-   * @param completeAccess Access all sub-indices at once.
-   * @param value          Value to write.
-   * @return True if successful.
-   */
-template<>
-bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value);
+// /*!
+//    * Send a writing SDO - specialization for strings
+//    * @param slave          Address of the slave.
+//    * @param index          Index of the SDO.
+//    * @param subindex       Sub-index of the SDO.
+//    * @param completeAccess Access all sub-indices at once.
+//    * @param value          Value to write.
+//    * @return True if successful.
+//    */
+// template<>
+// bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value);
 
 }  // namespace cifx_interface

@@ -117,6 +117,9 @@ class EthercatSlaveBase {
    */
   uint32_t getAddress() const { return address_; }
 
+  uint32_t getStationAddress() const { return stationAddress_; }
+
+
   /*!
    * Send a writing SDO.
    * @param index          Index of the SDO.
@@ -279,12 +282,16 @@ class EthercatSlaveBase {
 
   // Mutex prohibiting simultaneous access to EtherCAT slave.
   mutable std::recursive_mutex mutex_;
+  
   // Non owning pointer to the ethercat bus
-    EthercatBusBase* bus_{nullptr};
+  EthercatBusBase* bus_{nullptr};
+  
   // The bus address 
   // cyz: station address note:the station address is two byte in coe packet frame and little endian
   // and the station address is fixed by syscon.net but not topology position depended
-  uint32_t address_{0}; 
+  uint32_t address_{0};   // for Process Image data addressing
+  uint32_t station_address_{0}; // for station addressing
+  
 };
 
 using EthercatSlaveBasePtr = std::shared_ptr<EthercatSlaveBase>;

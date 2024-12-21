@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <soem_interface/EthercatBusBase.hpp>
-#include <soem_interface/EthercatSlaveBase.hpp>
+#include <cifx_interface/EthercatBusBase.hpp>
+#include <cifx_interface/EthercatSlaveBase.hpp>
 
 #include <string>
 #include <cstdint>
@@ -26,7 +26,7 @@ namespace ecat_master {
 
 /*!
  * Abstract class for EtherCAT devices compatible with the EthercatMaster.
- * EthercatDevice is derived from soem_interface.:EthercatSlaveBase.
+ * EthercatDevice is derived from cifx_interface.:EthercatSlaveBase.
  * The following functions must therefore also be implemented for every new device class:
  * - bool startup();
  * - void updateRead();
@@ -34,7 +34,7 @@ namespace ecat_master {
  * - void shutdown();
  * - PdoInfo getCurrentPdoInfo() const;
  */
-class EthercatDevice : public soem_interface::EthercatSlaveBase{
+class EthercatDevice : public cifx_interface::EthercatSlaveBase{
 public:
   typedef std::shared_ptr<EthercatDevice> SharedPtr;
 public:

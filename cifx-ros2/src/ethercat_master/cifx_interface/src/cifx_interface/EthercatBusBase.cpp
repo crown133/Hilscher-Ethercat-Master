@@ -168,8 +168,8 @@ void EthercatBusBase::DisplayDriverInformation (void)
 bool EthercatBusBase::busIsAvailable() const { return busIsAvailable(name_); }
 
 int EthercatBusBase::getNumberOfSlaves() const {
-  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-  return *ecatContext_.slavecount;
+  // std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  return slaves_.size();
 }
 
 bool EthercatBusBase::addSlave(const EthercatSlaveBasePtr& slave) {
@@ -195,70 +195,64 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
    * will open a second port as backup. You can send NULL as ifname if you have a
    * dedicated NIC selected in the nicdrv.c. It returns >0 if succeeded.
    */
-  if(CIFX_NO_ERROR == cifXDriverInit(&cifx_init_))
+  if(CIFX_NO_ERROR != cifXDriverInit(&cifx_init_))
   {
-    if(verbose_)
-    {
-      DisplayDriverInformation();
-    }
-    if (!busIsAvailable()) {
-      MELO_ERROR_STREAM("[" << getName() << "] "
-                            << "Bus is not available.");
-      printAvailableBusses();
-      return false;
-    }
-    if (ecx_init(&ecatContext_, name_.c_str()) <= 0) {
-      MELO_ERROR_STREAM("[" << getName() << "] "
-                            << "No socket connection. Execute as root.");
-      return false;
-    }
+    MELO_ERROR_STREAM("[" << getName() << "] "
+                            << "Driver init failed.");
+    return false;
+  }
+  if(verbose_) {
+    DisplayDriverInformation();
+  }
+  if (!busIsAvailable()) {
+    MELO_ERROR_STREAM("[" << getName() << "] "
+                          << "Bus is not available.");
+    printAvailableBusses();
+    return false;
+  }
 
-    // Initialize SOEM.
-    // Note: ecx_config_init(..) requests the slaves to go to PRE-OP.
-    for (unsigned int retry = 0; retry <= ecatConfigMaxRetries_; retry++) {
-      if (ecx_config_init(&ecatContext_, FALSE) > 0) {
-        // Successful initialization.
-        break;
-      } else if (retry == ecatConfigMaxRetries_) {
-        // Too many failed attempts.
-        MELO_ERROR_STREAM("[" << getName() << "] "
-                              << "No slaves have been found.");
-        return false;
-      }
-      // Sleep and retry.
-      cifx_interface::threadSleep(ecatConfigRetrySleep_);
-      MELO_INFO_STREAM("No slaves have been found, retrying " << retry + 1 << "/" << ecatConfigMaxRetries_ << " ...");
-    }
+  if(CIFX_NO_ERROR != xDriverOpen(&hDriver)) {
+    MELO_ERROR_STREAM("[" << getName() << "] "
+                            << "Driver open failed.");
+    return false;
+  }
 
+  /* Driver/Toolkit successfully opened */
+  if(CIFX_NO_ERROR != xChannelOpen(hDriver, name_, 0, &hChannel)) {
+    MELO_ERROR_STREAM("[" << getName() << "] "
+                            << "Channel open failed.");
+    return false;
+  }
+
+    // Todo：get slave numbers
     // Print the slaves which have been detected.
     MELO_INFO_STREAM("The following " << getNumberOfSlaves() << " slaves have been found and configured:");
-    for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
-      MELO_INFO_STREAM("Address: " << slave << " - Name: '" << std::string(ecatContext_.slavelist[slave].name) << "'");
-    }
+    // for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
+    //   MELO_INFO_STREAM("Address: " << slave << " - Name: '" << std::string(ecatContext_.slavelist[slave].name) << "'");
+    // }
 
-    // Check if the given slave addresses are valid.
-    bool slaveAddressesAreOk = true;
-    for (const auto& slave : slaves_) {
-      auto address = static_cast<int>(slave->getAddress());
-      if (address == 0) {
-        MELO_ERROR_STREAM("[" << getName() << "] "
-                              << "Slave '" << slave->getName() << "': Invalid address " << address << ".");
-        slaveAddressesAreOk = false;
-      }
-      if (address > getNumberOfSlaves()) {
-        MELO_ERROR_STREAM("[" << getName() << "] "
-                              << "Slave '" << slave->getName() << "': Invalid address " << address << ", "
-                              << "only " << getNumberOfSlaves() << " slave(s) found.");
-        slaveAddressesAreOk = false;
-      }
-    }
-    if (!slaveAddressesAreOk) {
-      return false;
-    }
+    // Todo： Check slave addresses
+    // // Check if the given slave addresses are valid.
+    // bool slaveAddressesAreOk = true;
+    // for (const auto& slave : slaves_) {
+    //   auto address = static_cast<int>(slave->getAddress());
+    //   if (address == 0) {
+    //     MELO_ERROR_STREAM("[" << getName() << "] "
+    //                           << "Slave '" << slave->getName() << "': Invalid address " << address << ".");
+    //     slaveAddressesAreOk = false;
+    //   }
+    //   if (address > getNumberOfSlaves()) {
+    //     MELO_ERROR_STREAM("[" << getName() << "] "
+    //                           << "Slave '" << slave->getName() << "': Invalid address " << address << ", "
+    //                           << "only " << getNumberOfSlaves() << " slave(s) found.");
+    //     slaveAddressesAreOk = false;
+    //   }
+    // }
+    // if (!slaveAddressesAreOk) {
+    //   return false;
+    // }
 
-    // Disable symmetrical transfers.
-    ecatContext_.grouplist[0].blockLRW = 1;
-
+    //Todo：Initialize slaves in host application instead of netx firmware
     // Initialize the communication interfaces of all slaves.
     for (auto& slave : slaves_) {
       if (!slave->startup()) {
@@ -268,51 +262,64 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
       }
     }
 
-    // Set up the communication IO mapping.
-    // Note: ecx_config_map_group(..) requests the slaves to go to SAFE-OP.
-    ecx_config_map_group(&ecatContext_, &ioMap_, 0);
-
     // Check if the size of the IO mapping fits our slaves.
     bool ioMapIsOk = true;
     // do this check only if 'sizeCheck' is true
     if (sizeCheck) {
       for (const auto& slave : slaves_) {
         const EthercatSlaveBase::PdoInfo pdoInfo = slave->getCurrentPdoInfo();
-        if (pdoInfo.rxPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Obytes) {
-          MELO_ERROR_STREAM("[" << getName() << "] "
-                                << "RxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.rxPdoSize_
-                                << " bytes but the slave found at its address " << slave->getAddress() << " requests "
-                                << ecatContext_.slavelist[slave->getAddress()].Obytes << " bytes).");
-          ioMapIsOk = false;
-        }
-        if (pdoInfo.txPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Ibytes) {
-          MELO_ERROR_STREAM("[" << getName() << "] "
-                                << "TxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.txPdoSize_
-                                << " bytes but the slave found at its address " << slave->getAddress() << " requests "
-                                << ecatContext_.slavelist[slave->getAddress()].Ibytes << " bytes).");
-          ioMapIsOk = false;
-        }
+        //TODO: auto get the size of PDO from netx
+        // if (pdoInfo.rxPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Obytes) {
+        //   MELO_ERROR_STREAM("[" << getName() << "] "
+        //                         << "RxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.rxPdoSize_
+        //                         << " bytes but the slave found at its address " << slave->getAddress() << " requests "
+        //                         << ecatContext_.slavelist[slave->getAddress()].Obytes << " bytes).");
+        //   ioMapIsOk = false;
+        // }
+        // if (pdoInfo.txPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Ibytes) {
+        //   MELO_ERROR_STREAM("[" << getName() << "] "
+        //                         << "TxPDO size mismatch: The slave '" << slave->getName() << "' expects a size of " << pdoInfo.txPdoSize_
+        //                         << " bytes but the slave found at its address " << slave->getAddress() << " requests "
+        //                         << ecatContext_.slavelist[slave->getAddress()].Ibytes << " bytes).");
+        //   ioMapIsOk = false;
+        // }
+
       }
     }
+
+    auto pdoRXSize = 0;
+    auto pdoTXSize = 0;
+    for (const auto& slave : slaves_) {
+      const EthercatSlaveBase::PdoInfo pdoInfo = slave->getCurrentPdoInfo();
+      pdoRXSize += pdoInfo.rxPdoSize_;
+      pdoTXSize += pdoInfo.txPdoSize_;
+    }
+    ioRecvData_.reset(new unsigned char[pdoRXSize]);
+    ioSendData_.reset(new unsigned char[pdoTXSize]);
+
     if (!ioMapIsOk) {
       return false;
     }
 
     // Initialize the memory with zeroes.
-    for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
-      memset(ecatContext_.slavelist[slave].inputs, 0, ecatContext_.slavelist[slave].Ibytes);
-      memset(ecatContext_.slavelist[slave].outputs, 0, ecatContext_.slavelist[slave].Obytes);
-    }
+    // for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
+    //   memset(ecatContext_.slavelist[slave].inputs, 0, ecatContext_.slavelist[slave].Ibytes);
+    //   memset(ecatContext_.slavelist[slave].outputs, 0, ecatContext_.slavelist[slave].Obytes);
+    // }
 
-    workingCounterTooLowCounter_ = 0;
     initlialized_ = true;
 
+    unsigned long ulState;
+    if(CIFX_NO_ERROR != xChannelBusState(hChannel, CIFX_BUS_STATE_ON,(uint32_t*) &ulState, 10000))
+    {
+      MELO_ERROR_STREAM("[" << getName() << "] "
+                            << "Error setting Bus state");
+      xChannelClose(hChannel);
+      xDriverClose(hDriver);
+      return false;
+    }
+
     return true;
-  }
-  else
-  {
-    return false;
-  }
 }
 
 void EthercatBusBase::updateRead() {
@@ -323,25 +330,12 @@ void EthercatBusBase::updateRead() {
 
   //! Receive the EtherCAT data.
   updateReadStamp_ = std::chrono::high_resolution_clock::now();
+  if(CIFX_NO_ERROR != xChannelIORead(hChannel, 0, 0, sizeof(ioRecvData_), ioRecvData_, 10)))
   {
-    std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-    wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+    MELO_ERROR_STREAM("Error reading IO Data area!\r\n");
+    break;
   }
   sentProcessData_ = false;
-
-  //! Check the working counter.
-  if (!workingCounterIsOk()) {
-    ++workingCounterTooLowCounter_;
-    if (!busIsOk()) {
-      MELO_WARN_THROTTLE_STREAM(1.0, "Bus is not ok. Too many working counter too low in a row: " << workingCounterTooLowCounter_)
-    }
-    MELO_DEBUG_STREAM("Working counter too low counter: " << workingCounterTooLowCounter_)
-    MELO_WARN_THROTTLE_STREAM(1.0, "Update Read:" << this);
-    MELO_WARN_THROTTLE_STREAM(1.0, "Working counter is too low: " << wkc_.load() << " < " << getExpectedWorkingCounter());
-    return;
-  }
-  // Reset working counter too low counter.
-  workingCounterTooLowCounter_ = 0;
 
   //! Each slave attached to this bus reads its data to the buffer.
   for (auto& slave : slaves_) {
@@ -361,8 +355,12 @@ void EthercatBusBase::updateWrite() {
 
   //! Send the EtherCAT data.
   updateWriteStamp_ = std::chrono::high_resolution_clock::now();
-  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-  ecx_send_processdata(&ecatContext_);
+  // std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  if(CIFX_NO_ERROR != (lRet = xChannelIOWrite(hChannel, 0, 0, sizeof(ioSendData_), ioSendData_, 10)))
+  {
+    MELO_ERROR_STREAM("Error writing to IO Data area!\r\n");
+    break;
+  }
   sentProcessData_ = true;
 }
 
@@ -370,7 +368,7 @@ void EthercatBusBase::shutdown() {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   // Set the slaves to state Init.
   if (getNumberOfSlaves() > 0) {
-    setState(EC_STATE_INIT);
+    setState(EC_STATE_INIT); //set master to init
     waitForState(EC_STATE_INIT);
   }
 
@@ -378,193 +376,200 @@ void EthercatBusBase::shutdown() {
     slave->shutdown();
   }
 
-  // Close the port.
-  if (ecatContext_.port != nullptr) {
-    MELO_INFO_STREAM("Closing socket ...");
-    ecx_close(&ecatContext_);
-    // Sleep to make sure the socket is closed, because ecx_close is non-blocking.
-    cifx_interface::threadSleep(0.5);
-  }
+  xChannelClose(hChannel);
+  xDriverClose(hDriver);
+
+  unsigned long ulState;
+  xChannelBusState(hChannel, CIFX_BUS_STATE_OFF, (uint32_t*) &ulState, 10000);
 
   initlialized_ = false;
 }
 
 void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
-  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  // std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   if(!initlialized_) {
     MELO_ERROR_STREAM("Bus " << name_ << " was not successfully initialized, skipping operation");
     return;
   }
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
-  ecatContext_.slavelist[slave].state = state;
-  ecx_writestate(&ecatContext_, slave);
-  MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
+  
+  int32_t lRet;
+  if(slave == 0) {
+    ECM_IF_SET_MASTER_TARGET_STATE_REQ_T master_stateSetReq;
+    master_stateSetReq.tHead.ulCmd = ECM_IF_CMD_SET_MASTER_TARGET_STATE_REQ;
+    master_stateSetReq.tHead.ulLen = 1;
+    master_stateSetReq.tHead.ulDest = 0x20;
+    master_stateSetReq.tData.bTargetState = state;
+
+    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &master_stateSetReq, 10)))
+    {
+      MELO_ERROR_STREAM("Master state set failed, Error sending packet to device " << lRet);
+    } else {
+      ECM_IF_SET_MASTER_TARGET_STATE_CNF_T master_stateSetCnf;
+      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateSetCnf), &master_stateSetCnf, 20)) )
+      {
+        MELO_ERROR_STREAM("Error getting state from master " << lRet);
+      }
+    }
+    MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been set.");
+  }
+  else if(slave > 0) {
+    ECM_IF_SET_SLAVE_TARGET_STATE_REQ_T slave_stateSetReq;
+    slave_stateSetReq.tHead.ulCmd = ECM_IF_CMD_SET_SLAVE_TARGET_STATE_REQ;
+    slave_stateSetReq.tHead.ulLen = 3;
+    slave_stateSetReq.tHead.ulDest = 0x20;
+    slave_stateSetReq.tData.usStationAddress = slaves_[slave-1]->getStationAddress();
+    slave_stateSetReq.tData.bTargetState = state;
+    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &slave_stateSetReq, 10)))
+    {
+      MELO_ERROR_STREAM("Slave state set failed, Error sending packet to device " << lRet);
+    } else {
+      ECM_IF_SET_SLAVE_TARGET_STATE_CNF_T slave_stateSetCnf;
+      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateSetCnf), &slave_stateSetCnf, 20)) )
+      {
+        MELO_ERROR_STREAM("Error getting state from slave " << lRet);
+      }
+    }
+    MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
+  }
+
 }
 
 bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, const unsigned int maxRetries, const double retrySleep) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
-  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  // std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   for (unsigned int retry = 0; retry <= maxRetries; retry++) {
-    if (ecx_statecheck(&ecatContext_, slave, state, static_cast<int>(1e6 * retrySleep)) == state) {
-      MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been reached.");
-      return true;
+    int32_t lRet;
+    if(slave == 0) {
+      ECM_IF_GET_MASTER_CURRENT_STATE_REQ_T master_stateGetReq;
+      master_stateGetReq.tHead.ulCmd = ECM_IF_CMD_GET_MASTER_CURRENT_STATE_REQ;
+      master_stateGetReq.tHead.ulLen = 0;
+      master_stateGetReq.tHead.ulDest = 0x20;
+      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &master_stateGetReq, 10)))
+      {
+        MELO_ERROR_STREAM("Master state get failed, Error sending packet to device " << lRet);
+      } else {
+        ECM_IF_GET_MASTER_CURRENT_STATE_CNF_T master_stateGetCnf;
+        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateGetCnf), &master_stateGetCnf, 20)) )
+        {
+          MELO_ERROR_STREAM("Error getting state from master " << lRet);
+        }
+        if(master_stateGetCnf.tData.bCurrentState == state) {
+          MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been reached.");
+          return true;
+        }
+      }
+      MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been set.");
     }
-    // TODO: Do this for all states?
-    ecx_send_processdata(&ecatContext_);
-    wkc_ = ecx_receive_processdata(&ecatContext_, EC_TIMEOUTRET);
+    else if(slave > 0) {
+      ECM_IF_GET_SLAVE_CURRENT_STATE_REQ_T slave_stateGetReq;
+      slave_stateGetReq.tHead.ulCmd = ECM_IF_CMD_GET_SLAVE_CURRENT_STATE_REQ;
+      slave_stateGetReq.tHead.ulLen = 2;
+      slave_stateGetReq.tHead.ulDest = 0x20;
+      slave_stateGetReq.tData.usStationAddress = slaves_[slave-1]->getStationAddress();
+      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &slave_stateGetReq, 10)))
+      {
+        MELO_ERROR_STREAM("Slave state set failed, Error sending packet to device " << lRet);
+      } else {
+        ECM_IF_GET_SLAVE_CURRENT_STATE_CNF_T slave_stateGetCnf;
+        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateGetCnf), &slave_stateGetCnf, 20)) )
+        {
+          MELO_ERROR_STREAM("Error getting state from slave " << lRet);
+        }
+        if(slave_stateGetCnf.tData.bCurrentState == state) {
+          MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been reached.");
+          return true;
+        }
+      }
+      MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
+    }
+    struct timespec ts;
+    ts.tv_sec = retrySleep; //retrySleep = s
+    ts.tv_nsec = (retrySleep % 1) * 1000000000;
+    nanosleep(&ts, NULL);
   }
 
   MELO_WARN_STREAM("Slave " << slave << ": State " << state << " has not been reached.");
   return false;
 }
 
-int EthercatBusBase::getExpectedWorkingCounter(const uint16_t slave) const {
-  assert(static_cast<int>(slave) <= getNumberOfSlaves());
-  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-  return ecatContext_.grouplist[slave].outputsWKC * 2 + ecatContext_.grouplist[slave].inputsWKC;
-}
-
-std::string EthercatBusBase::getErrorString(ec_errort error) {
-  std::stringstream stream;
-  stream << "Time: " << (static_cast<double>(error.Time.sec) + (static_cast<double>(error.Time.usec) / 1000000.0));
-
-  switch (error.Etype) {
-    case EC_ERR_TYPE_SDO_ERROR:
-      stream << " SDO slave: " << error.Slave << " index: 0x" << std::setfill('0') << std::setw(4) << std::hex << error.Index << "."
-             << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(error.SubIdx) << " error: 0x" << std::setfill('0')
-             << std::setw(8) << std::hex << static_cast<unsigned>(error.AbortCode) << " " << ec_sdoerror2string(error.AbortCode);
-      break;
-    case EC_ERR_TYPE_EMERGENCY:
-      stream << " EMERGENCY slave: " << error.Slave << " error: 0x" << std::setfill('0') << std::setw(4) << std::hex << error.ErrorCode;
-      break;
-    case EC_ERR_TYPE_PACKET_ERROR:
-      stream << " PACKET slave: " << error.Slave << " index: 0x" << std::setfill('0') << std::setw(4) << std::hex << error.Index << "."
-             << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(error.SubIdx) << " error: 0x" << std::setfill('0')
-             << std::setw(8) << std::hex << error.ErrorCode;
-      break;
-    case EC_ERR_TYPE_SDOINFO_ERROR:
-      stream << " SDO slave: " << error.Slave << " index: 0x" << std::setfill('0') << std::setw(4) << std::hex << error.Index << "."
-             << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(error.SubIdx) << " error: 0x" << std::setfill('0')
-             << std::setw(8) << std::hex << static_cast<unsigned>(error.AbortCode) << " " << ec_sdoerror2string(error.AbortCode);
-      break;
-    case EC_ERR_TYPE_SOE_ERROR:
-      stream << " SoE slave: " << error.Slave << " index: 0x" << std::setfill('0') << std::setw(4) << std::hex << error.Index
-             << " error: 0x" << std::setfill('0') << std::setw(8) << std::hex << static_cast<unsigned>(error.AbortCode) << " "
-             << ec_soeerror2string(error.ErrorCode);
-      break;
-    case EC_ERR_TYPE_MBX_ERROR:
-      stream << " MBX slave: " << error.Slave << " error: 0x" << std::setfill('0') << std::setw(8) << std::hex << error.ErrorCode << " "
-             << ec_mbxerror2string(error.ErrorCode);
-      break;
-    default:
-      stream << " MBX slave: " << error.Slave << " error: 0x" << std::setfill('0') << std::setw(8) << std::hex
-             << static_cast<unsigned>(error.AbortCode);
-      break;
-  }
-  return stream.str();
-}
-
-void EthercatBusBase::printALStatus(const uint16_t slave) {
-  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-  assert(static_cast<int>(slave) <= getNumberOfSlaves());
-
-  MELO_INFO_STREAM(" slave: " << slave << " alStatusCode: 0x" << std::setfill('0') <<
-                   std::setw(8) << std::hex << ecatContext_.slavelist[slave].ALstatuscode <<
-                   " " << ec_ALstatuscode2string(ecatContext_.slavelist[slave].ALstatuscode));
-}
-
-bool EthercatBusBase::checkForSdoErrors(const uint16_t slave, const uint16_t index) {
-  while (ecx_iserror(&ecatContext_)) {
-    ec_errort error;
-    if (ecx_poperror(&ecatContext_, &error)) {
-      std::string errorStr = getErrorString(error);
-      MELO_ERROR_STREAM(errorStr);
-      if (error.Slave == slave && error.Index == index) {
-        cifx_interface::common::MessageLog::insertMessage(message_logger::log::levels::Level::Error, errorStr);
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-bool EthercatBusBase::workingCounterIsOk() const { return wkc_ >= getExpectedWorkingCounter(); }
-
-bool EthercatBusBase::busIsOk() const { return workingCounterTooLowCounter_ < maxWorkingCounterTooLow_; }
+bool EthercatBusBase::busIsOk() const { return true; }  //TODO: check the state of bus
 
 void EthercatBusBase::syncDistributedClock0(const uint16_t slave, const bool activate, const double cycleTime, const double cycleShift) {
-  MELO_INFO_STREAM("Bus '" << name_ << "', slave " << slave << ":  " << (activate ? "Activating" : "Deactivating")
-                           << " distributed clock synchronization...");
+  // MELO_INFO_STREAM("Bus '" << name_ << "', slave " << slave << ":  " << (activate ? "Activating" : "Deactivating")
+  //                          << " distributed clock synchronization...");
 
-  ecx_dcsync0(&ecatContext_, slave, static_cast<uint8_t>(activate), static_cast<uint32_t>(cycleTime * 1e9),
-              static_cast<int32_t>(1e9 * cycleShift));
+  // ecx_dcsync0(&ecatContext_, slave, static_cast<uint8_t>(activate), static_cast<uint32_t>(cycleTime * 1e9),
+  //             static_cast<int32_t>(1e9 * cycleShift));
 
-  MELO_INFO_STREAM("Bus '" << name_ << "', slave " << slave << ":  " << (activate ? "Activated" : "Deactivated")
-                           << " distributed clock synchronization.");
+  // MELO_INFO_STREAM("Bus '" << name_ << "', slave " << slave << ":  " << (activate ? "Activated" : "Deactivated")
+  //                          << " distributed clock synchronization.");
+  //TODO: set the distributed clock
 }
 
-EthercatBusBase::PdoSizeMap EthercatBusBase::getHardwarePdoSizes() {
-  PdoSizeMap pdoMap;
+// //TODO: auto get the size of PDO from netx
+// EthercatBusBase::PdoSizeMap EthercatBusBase::getHardwarePdoSizes() {
+//   PdoSizeMap pdoMap;
 
-  for (const auto& slave : slaves_) {
-    pdoMap.insert(std::make_pair(slave->getName(), getHardwarePdoSizes(slave->getAddress())));
-  }
+//   for (const auto& slave : slaves_) {
+//     pdoMap.insert(std::make_pair(slave->getName(), getHardwarePdoSizes(slave->getAddress())));
+//   }
 
-  return pdoMap;
-}
+//   return pdoMap;
+// }
 
-EthercatBusBase::PdoSizePair EthercatBusBase::getHardwarePdoSizes(const uint16_t slave) {
-  return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
-}
+// EthercatBusBase::PdoSizePair EthercatBusBase::getHardwarePdoSizes(const uint16_t slave) {
+//   return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
+// }
 
-template<>
-bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    //Expected length of the string. String needs to be preallocated
-    int size = value.length();
-    //Store for check at the end
-    int expected_size = size;
-    //Create buffer with the length of the string
-    char buffer[size];
-    int wkc = 0;
-    {
-      std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-      wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, buffer, EC_TIMEOUTRXM);
-      //Convert read data to a std::string
-      value = std::string(buffer,size);
-    }
-    if (wkc <= 0) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
-                                 << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                 << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
+// template<>
+// bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value) {
+//     assert(static_cast<int>(slave) <= getNumberOfSlaves());
+//     //Expected length of the string. String needs to be preallocated
+//     int size = value.length();
+//     //Store for check at the end
+//     int expected_size = size;
+//     //Create buffer with the length of the string
+//     char buffer[size];
+//     int wkc = 0;
+//     {
+//       std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+//       wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, buffer, EC_TIMEOUTRXM);
+//       //Convert read data to a std::string
+//       value = std::string(buffer,size);
+//     }
+//     if (wkc <= 0) {
+//       MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for reading SDO (ID: 0x" << std::setfill('0')
+//                                  << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
+//                                  << static_cast<uint16_t>(subindex) << ").");
+//       return false;
+//     }
 
-    if (size != (int)expected_size) {
-      MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " << expected_size << " bytes, read " << size
-                                 << " bytes) for reading SDO (ID: 0x" << std::setfill('0') << std::setw(4) << std::hex << index
-                                 << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(subindex) << ").");
-      return false;
-    }
-    return true;
-}
+//     if (size != (int)expected_size) {
+//       MELO_ERROR_STREAM("Slave " << slave << ": Size mismatch (expected " << expected_size << " bytes, read " << size
+//                                  << " bytes) for reading SDO (ID: 0x" << std::setfill('0') << std::setw(4) << std::hex << index
+//                                  << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<uint16_t>(subindex) << ").");
+//       return false;
+//     }
+//     return true;
+// }
 
-template<>
-bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
-    const int size = value.length();
-    const char* dataPtr = value.data();
-    int wkc = 0;
-    {
-        std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-        wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &dataPtr, EC_TIMEOUTRXM);
-    }
-    if (wkc <= 0) {
-        MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for writing SDO (ID: 0x" << std::setfill('0')
-                                   << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
-                                   << static_cast<uint16_t>(subindex) << ").");
-        return false;
-    }
-    return true;
-}
+// template<>
+// bool EthercatBusBase::sendSdoWrite<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, const std::string value) {
+//     assert(static_cast<int>(slave) <= getNumberOfSlaves());
+//     const int size = value.length();
+//     const char* dataPtr = value.data();
+//     int wkc = 0;
+//     {
+//         std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+//         wkc = ecx_SDOwrite(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), size, &dataPtr, EC_TIMEOUTRXM);
+//     }
+//     if (wkc <= 0) {
+//         MELO_ERROR_STREAM("Slave " << slave << ": Working counter too low (" << wkc << ") for writing SDO (ID: 0x" << std::setfill('0')
+//                                    << std::setw(4) << std::hex << index << ", SID 0x" << std::setfill('0') << std::setw(2) << std::hex
+//                                    << static_cast<uint16_t>(subindex) << ").");
+//         return false;
+//     }
+//     return true;
+// }
 }  // namespace cifx_interface

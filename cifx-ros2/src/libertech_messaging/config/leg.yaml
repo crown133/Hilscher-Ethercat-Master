@@ -7,7 +7,8 @@ ethercat_devices:
     name:               LeftLegHTAAElmo
     configuration_file: device_configurations/elmo_hip_yaw.yaml
     ethercat_bus:       eno1
-    ethercat_address:   2
+    ethercat_address:   1  ## started from 1
+    station_adderss:    0x100
 
   - type:               Elmo
     name:               LeftLegHAAElmo

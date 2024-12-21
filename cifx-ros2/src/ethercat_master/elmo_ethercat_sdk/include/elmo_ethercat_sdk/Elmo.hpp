@@ -45,7 +45,7 @@ class Elmo : public ecat_master::EthercatDevice {
   static SharedPtr deviceFromFile(const std::string& configFile, const std::string& name, const uint32_t address);
   // constructor
   Elmo() = default;
-  Elmo(const std::string& name, const uint32_t address);
+  Elmo(const std::string& name, const uint32_t address, const uint32_t stationAddress);
 
   // pure virtual overwrites
  public:

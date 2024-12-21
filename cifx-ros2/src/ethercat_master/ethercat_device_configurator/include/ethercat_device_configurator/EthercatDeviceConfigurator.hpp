@@ -42,6 +42,7 @@ public:
         std::string config_file_path;
 
         uint32_t ethercat_address;
+        uint32_t station_address;
         std::string ethercat_bus;
         std::string ethercat_pdo_type;
     };
