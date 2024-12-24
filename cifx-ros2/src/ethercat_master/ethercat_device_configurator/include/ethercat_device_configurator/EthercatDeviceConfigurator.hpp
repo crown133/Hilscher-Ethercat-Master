@@ -94,7 +94,6 @@ public:
     template<typename T, typename dummy = std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
     std::vector<std::shared_ptr<T>> getSlavesOfType()
     {
-
         std::vector<std::shared_ptr<T>> slaves;
 
         for(auto & slave: m_slaves)

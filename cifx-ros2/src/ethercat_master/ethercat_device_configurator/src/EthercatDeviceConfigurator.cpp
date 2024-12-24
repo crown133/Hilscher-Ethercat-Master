@@ -269,7 +269,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
         {
 #ifdef _ELMO_FOUND_
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            slave = elmo::Elmo::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
+            slave = elmo::Elmo::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, entry.station_address);
 #else
             throw std::runtime_error("elmo_ethercat_sdk not availabe.");
 #endif

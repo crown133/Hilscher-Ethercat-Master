@@ -41,9 +41,9 @@ bool EthercatSlaveBase::sendSdoWriteGeneric(const std::string& indexString, cons
   return false;
 }
 
-bool EthercatSlaveBase::sendSdoReadVisibleString(const uint16_t index, const uint8_t subindex, std::string& value) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  return bus_->sendSdoReadVisibleString(address_, index, subindex, value);
-}
+// bool EthercatSlaveBase::sendSdoReadVisibleString(const uint16_t index, const uint8_t subindex, std::string& value) {
+//   std::lock_guard<std::recursive_mutex> lock(mutex_);
+//   return bus_->sendSdoReadVisibleString(address_, index, subindex, value);
+// }
 
 }  // namespace cifx_interface

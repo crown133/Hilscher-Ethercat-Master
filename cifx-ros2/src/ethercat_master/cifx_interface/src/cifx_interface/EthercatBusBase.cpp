@@ -135,8 +135,15 @@ void EthercatBusBase::printAvailableBusses() {
 
   printf(" State = 0x%08X\r\n", (unsigned int)lRet);
   printf("----------------------------------------------------\r\n");
-
-  return lRet;
+}
+void ShowError( int32_t lError )
+{
+  if( lError != CIFX_NO_ERROR)
+  {
+    char szError[1024] ={0};
+    xDriverGetErrorDescription( lError,  szError, sizeof(szError));
+    printf("Error: 0x%X, <%s>\n", (unsigned int)lError, szError);
+  }
 }
 
 void EthercatBusBase::DisplayDriverInformation (void)
@@ -218,7 +225,7 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
   }
 
   /* Driver/Toolkit successfully opened */
-  if(CIFX_NO_ERROR != xChannelOpen(hDriver, name_, 0, &hChannel)) {
+  if(CIFX_NO_ERROR != xChannelOpen(hDriver, name_.c_str(), 0, &hChannel)) {
     MELO_ERROR_STREAM("[" << getName() << "] "
                             << "Channel open failed.");
     return false;
@@ -265,9 +272,9 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
     // Check if the size of the IO mapping fits our slaves.
     bool ioMapIsOk = true;
     // do this check only if 'sizeCheck' is true
-    if (sizeCheck) {
-      for (const auto& slave : slaves_) {
-        const EthercatSlaveBase::PdoInfo pdoInfo = slave->getCurrentPdoInfo();
+    // if (sizeCheck) {
+      // for (const auto& slave : slaves_) {
+        // const EthercatSlaveBase::PdoInfo pdoInfo = slave->getCurrentPdoInfo();
         //TODO: auto get the size of PDO from netx
         // if (pdoInfo.rxPdoSize_ != ecatContext_.slavelist[slave->getAddress()].Obytes) {
         //   MELO_ERROR_STREAM("[" << getName() << "] "
@@ -284,8 +291,8 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
         //   ioMapIsOk = false;
         // }
 
-      }
-    }
+      // }
+    // }
 
     auto pdoRXSize = 0;
     auto pdoTXSize = 0;
@@ -294,8 +301,9 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
       pdoRXSize += pdoInfo.rxPdoSize_;
       pdoTXSize += pdoInfo.txPdoSize_;
     }
-    ioRecvData_.reset(new unsigned char[pdoRXSize]);
-    ioSendData_.reset(new unsigned char[pdoTXSize]);
+    //TODO: change the size of the IO mapping accroding to the actual size
+    // ioRecvData_.reset(new unsigned char[pdoRXSize]);
+    // ioSendData_.reset(new unsigned char[pdoTXSize]);
 
     if (!ioMapIsOk) {
       return false;
@@ -330,10 +338,9 @@ void EthercatBusBase::updateRead() {
 
   //! Receive the EtherCAT data.
   updateReadStamp_ = std::chrono::high_resolution_clock::now();
-  if(CIFX_NO_ERROR != xChannelIORead(hChannel, 0, 0, sizeof(ioRecvData_), ioRecvData_, 10)))
+  if(CIFX_NO_ERROR != xChannelIORead(hChannel, 0, 0, sizeof(ioRecvData_), ioRecvData_, 10))
   {
     MELO_ERROR_STREAM("Error reading IO Data area!\r\n");
-    break;
   }
   sentProcessData_ = false;
 
@@ -356,20 +363,20 @@ void EthercatBusBase::updateWrite() {
   //! Send the EtherCAT data.
   updateWriteStamp_ = std::chrono::high_resolution_clock::now();
   // std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-  if(CIFX_NO_ERROR != (lRet = xChannelIOWrite(hChannel, 0, 0, sizeof(ioSendData_), ioSendData_, 10)))
+  if(CIFX_NO_ERROR != xChannelIOWrite(hChannel, 0, 0, sizeof(ioSendData_), ioSendData_, 10))
   {
     MELO_ERROR_STREAM("Error writing to IO Data area!\r\n");
-    break;
+  } else {
+    sentProcessData_ = true;
   }
-  sentProcessData_ = true;
 }
 
 void EthercatBusBase::shutdown() {
   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   // Set the slaves to state Init.
   if (getNumberOfSlaves() > 0) {
-    setState(EC_STATE_INIT); //set master to init
-    waitForState(EC_STATE_INIT);
+    setState(ECM_IF_STATE_INIT); //set master to init
+    waitForState(ECM_IF_STATE_INIT);
   }
 
   for (auto& slave : slaves_) {
@@ -394,6 +401,9 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
   assert(static_cast<int>(slave) <= getNumberOfSlaves());
   
   int32_t lRet;
+  CIFX_PACKET tSendPkt       = {{0}};
+  CIFX_PACKET tRecvPkt       = {{0}};
+
   if(slave == 0) {
     ECM_IF_SET_MASTER_TARGET_STATE_REQ_T master_stateSetReq;
     master_stateSetReq.tHead.ulCmd = ECM_IF_CMD_SET_MASTER_TARGET_STATE_REQ;
@@ -401,17 +411,21 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
     master_stateSetReq.tHead.ulDest = 0x20;
     master_stateSetReq.tData.bTargetState = state;
 
-    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &master_stateSetReq, 10)))
+    // tSendPkt.tHeader = master_stateSetReq.tHead;
+    // memcpy(&tSendPkt.abData, &master_stateSetReq.tData, sizeof(master_stateSetReq.tData));
+    memcpy(&tSendPkt, &master_stateSetReq, sizeof(master_stateSetReq));
+   
+    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
     {
       MELO_ERROR_STREAM("Master state set failed, Error sending packet to device " << lRet);
     } else {
       ECM_IF_SET_MASTER_TARGET_STATE_CNF_T master_stateSetCnf;
-      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateSetCnf), &master_stateSetCnf, 20)) )
+      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateSetCnf), &tRecvPkt, 20)) )
       {
         MELO_ERROR_STREAM("Error getting state from master " << lRet);
       }
+      MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been set.");
     }
-    MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been set.");
   }
   else if(slave > 0) {
     ECM_IF_SET_SLAVE_TARGET_STATE_REQ_T slave_stateSetReq;
@@ -420,17 +434,22 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
     slave_stateSetReq.tHead.ulDest = 0x20;
     slave_stateSetReq.tData.usStationAddress = slaves_[slave-1]->getStationAddress();
     slave_stateSetReq.tData.bTargetState = state;
-    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &slave_stateSetReq, 10)))
+
+    // tSendPkt.tHeader = slave_stateSetReq.tHead;
+    // memcpy(&tSendPkt.abData, &slave_stateSetReq.tData, sizeof(slave_stateSetReq.tData));
+    memcpy(&tSendPkt, &slave_stateSetReq, sizeof(slave_stateSetReq));
+
+    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
     {
       MELO_ERROR_STREAM("Slave state set failed, Error sending packet to device " << lRet);
     } else {
       ECM_IF_SET_SLAVE_TARGET_STATE_CNF_T slave_stateSetCnf;
-      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateSetCnf), &slave_stateSetCnf, 20)) )
+      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateSetCnf), &tRecvPkt, 20)) )
       {
         MELO_ERROR_STREAM("Error getting state from slave " << lRet);
       }
+      MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
     }
-    MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
   }
 
 }
@@ -440,20 +459,28 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
   // std::lock_guard<std::recursive_mutex> guard(contextMutex_);
   for (unsigned int retry = 0; retry <= maxRetries; retry++) {
     int32_t lRet;
+    CIFX_PACKET tSendPkt       = {{0}};
+    CIFX_PACKET tRecvPkt       = {{0}};
+
     if(slave == 0) {
       ECM_IF_GET_MASTER_CURRENT_STATE_REQ_T master_stateGetReq;
       master_stateGetReq.tHead.ulCmd = ECM_IF_CMD_GET_MASTER_CURRENT_STATE_REQ;
       master_stateGetReq.tHead.ulLen = 0;
       master_stateGetReq.tHead.ulDest = 0x20;
-      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &master_stateGetReq, 10)))
+      // tSendPkt.tHeader = master_stateGetReq.tHead;
+      // memcpy(&tSendPkt.abData, &master_stateGetReq.tData, sizeof(master_stateGetReq.tData));
+      memcpy(&tSendPkt, &master_stateGetReq, sizeof(master_stateGetReq));
+
+      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
       {
         MELO_ERROR_STREAM("Master state get failed, Error sending packet to device " << lRet);
       } else {
         ECM_IF_GET_MASTER_CURRENT_STATE_CNF_T master_stateGetCnf;
-        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateGetCnf), &master_stateGetCnf, 20)) )
+        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateGetCnf), &tRecvPkt, 20)) )
         {
           MELO_ERROR_STREAM("Error getting state from master " << lRet);
         }
+        memcpy(&master_stateGetCnf.tData, &tRecvPkt.abData, sizeof(master_stateGetCnf.tData));
         if(master_stateGetCnf.tData.bCurrentState == state) {
           MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been reached.");
           return true;
@@ -467,15 +494,21 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
       slave_stateGetReq.tHead.ulLen = 2;
       slave_stateGetReq.tHead.ulDest = 0x20;
       slave_stateGetReq.tData.usStationAddress = slaves_[slave-1]->getStationAddress();
-      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &slave_stateGetReq, 10)))
+
+      // tSendPkt.tHeader = slave_stateGetReq.tHead;
+      // memcpy(&tSendPkt.abData, &slave_stateGetReq.tData, sizeof(slave_stateGetReq.tData));
+      memcpy(&tSendPkt, &slave_stateGetReq, sizeof(slave_stateGetReq));
+
+      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
       {
         MELO_ERROR_STREAM("Slave state set failed, Error sending packet to device " << lRet);
       } else {
         ECM_IF_GET_SLAVE_CURRENT_STATE_CNF_T slave_stateGetCnf;
-        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateGetCnf), &slave_stateGetCnf, 20)) )
+        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateGetCnf), &tRecvPkt, 20)) )
         {
           MELO_ERROR_STREAM("Error getting state from slave " << lRet);
         }
+        memcpy(&slave_stateGetCnf.tData, &tRecvPkt.abData, sizeof(slave_stateGetCnf.tData));
         if(slave_stateGetCnf.tData.bCurrentState == state) {
           MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been reached.");
           return true;
@@ -484,8 +517,8 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
       MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
     }
     struct timespec ts;
-    ts.tv_sec = retrySleep; //retrySleep = s
-    ts.tv_nsec = (retrySleep % 1) * 1000000000;
+    ts.tv_sec = static_cast<time_t>(retrySleep); //retrySleep = s
+    ts.tv_nsec = static_cast<long>((std::fmod(retrySleep, 1.0)) * 1e9);
     nanosleep(&ts, NULL);
   }
 
@@ -507,20 +540,22 @@ void EthercatBusBase::syncDistributedClock0(const uint16_t slave, const bool act
   //TODO: set the distributed clock
 }
 
-// //TODO: auto get the size of PDO from netx
-// EthercatBusBase::PdoSizeMap EthercatBusBase::getHardwarePdoSizes() {
-//   PdoSizeMap pdoMap;
+//TODO: auto get the size of PDO from netx
+EthercatBusBase::PdoSizeMap EthercatBusBase::getHardwarePdoSizes() {
+  PdoSizeMap pdoMap;
 
-//   for (const auto& slave : slaves_) {
-//     pdoMap.insert(std::make_pair(slave->getName(), getHardwarePdoSizes(slave->getAddress())));
-//   }
+  // for (const auto& slave : slaves_) {
+  //   pdoMap.insert(std::make_pair(slave->getName(), getHardwarePdoSizes(slave->getAddress())));
+  // }
 
-//   return pdoMap;
-// }
+  return pdoMap;
+}
 
 // EthercatBusBase::PdoSizePair EthercatBusBase::getHardwarePdoSizes(const uint16_t slave) {
-//   return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
+//   // return std::make_pair(ecatContext_.slavelist[slave].Obytes, ecatContext_.slavelist[slave].Ibytes);
+  
 // }
+
 
 // template<>
 // bool EthercatBusBase::sendSdoRead<std::string>(const uint16_t slave, const uint16_t index, const uint8_t subindex, const bool completeAccess, std::string& value) {
@@ -534,7 +569,7 @@ void EthercatBusBase::syncDistributedClock0(const uint16_t slave, const bool act
 //     int wkc = 0;
 //     {
 //       std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-//       wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<boolean>(completeAccess), &size, buffer, EC_TIMEOUTRXM);
+//       wkc = ecx_SDOread(&ecatContext_, slave, index, subindex, static_cast<bool>(completeAccess), &size, buffer, EC_TIMEOUTRXM);
 //       //Convert read data to a std::string
 //       value = std::string(buffer,size);
 //     }

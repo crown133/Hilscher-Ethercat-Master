@@ -67,7 +67,7 @@ void EthercatBusManagerBase::setBussesOperational() {
   std::lock_guard<std::recursive_mutex> lock(busMutex_);
   // Only set the state but do not wait for it, since some devices (e.g. junctions) might not be able to reach it.
   for (auto& bus : buses_) {
-    bus.second->setState(EC_STATE_OPERATIONAL);
+    bus.second->setState(ECM_IF_STATE_OP);
   }
 }
 
@@ -75,7 +75,7 @@ void EthercatBusManagerBase::setBussesPreOperational() {
   std::lock_guard<std::recursive_mutex> lock(busMutex_);
   // Only set the state but do not wait for it, since some devices (e.g. junctions) might not be able to reach it.
   for (auto& bus : buses_) {
-    bus.second->setState(EC_STATE_PRE_OP);
+    bus.second->setState(ECM_IF_STATE_PREOP);
   }
 }
 
@@ -83,7 +83,7 @@ void EthercatBusManagerBase::setBussesSafeOperational() {
   std::lock_guard<std::recursive_mutex> lock(busMutex_);
   // Only set the state but do not wait for it, since some devices (e.g. junctions) might not be able to reach it.
   for (auto& bus : buses_) {
-    bus.second->setState(EC_STATE_SAFE_OP);
+    bus.second->setState(ECM_IF_STATE_SAFEOP);
   }
 }
 

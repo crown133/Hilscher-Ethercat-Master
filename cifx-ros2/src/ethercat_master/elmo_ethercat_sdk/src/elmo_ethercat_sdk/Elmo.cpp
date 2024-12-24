@@ -63,15 +63,15 @@ Elmo::SharedPtr Elmo::deviceFromFile(const std::string& configFile,
 }
 
 Elmo::Elmo(const std::string& name, const uint32_t address, const uint32_t stationAddress) {
+  name_ = name;
   address_ = address;
   station_address_ = stationAddress;
-  name_ = name;
 }
 
 bool Elmo::startup() {
   bool success = true;
   //todo: set the slave state to EC_STATE_PRE_OP
-  success &= bus_->waitForState(EC_STATE_PRE_OP, address_, 50, 0.05);
+  success &= bus_->waitForState(ECM_IF_STATE_PREOP, address_, 50, 0.05);
   // todo: note the dc shift time which was configured in syscon.net
   // bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_ / 2.f);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -119,7 +119,7 @@ bool Elmo::startup() {
 }
 
 void Elmo::shutdown() {
-  bus_->setState(EC_STATE_INIT, address_);
+  bus_->setState(ECM_IF_STATE_INIT, address_);
 }
 
 
@@ -809,12 +809,12 @@ void Elmo::autoConfigurePdoSizes() {
     MELO_ERROR_STREAM("Elmo " << name_ << " have no configuration for RxPdoTypeEnum " << configuration_.rxPdoTypeEnum);
   }
   
-  if(configuration_.TxPdoTypeEnum == TxPdoTypeEnum::TxPdoStandard) {
+  if(configuration_.txPdoTypeEnum == TxPdoTypeEnum::TxPdoStandard) {
     pdoInfo_.txPdoSize_ = sizeof(TxPdoStandard);
-  } else if(configuration_.TxPdoTypeEnum == TxPdoTypeEnum::TxPdoCST) {
+  } else if(configuration_.txPdoTypeEnum == TxPdoTypeEnum::TxPdoCST) {
     pdoInfo_.txPdoSize_ = sizeof(TxPdoCST);
   } else {
-    MELO_ERROR_STREAM("Elmo " << name_ << " have no configuration for TxPdoTypeEnum " << configuration_.TxPdoTypeEnum);
+    MELO_ERROR_STREAM("Elmo " << name_ << " have no configuration for TxPdoTypeEnum " << configuration_.txPdoTypeEnum);
   }
 }
 

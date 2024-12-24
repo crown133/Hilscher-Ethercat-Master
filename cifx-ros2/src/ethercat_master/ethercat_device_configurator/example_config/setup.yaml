@@ -1,13 +1,14 @@
 ethercat_master:
-  time_step:                          0.0025
+  time_step:                          0.001
   update_rate_too_low_warn_threshold: 50
 
 ethercat_devices:
   - type:               Elmo
     name:               ElmoTwitter
     configuration_file: device_configurations/elmo.yaml
-    ethercat_bus:       enp92s0
-    ethercat_address:   1
+    ethercat_bus:       cifx0
+    ethercat_address:   1     ## started from 1, used for PI image data addressing
+    station_adderss:    0x100 ## cofigured by user, used for SDO and configuration addressing
 
   # - type:               Anydrive
   #   name:               Dynadrive

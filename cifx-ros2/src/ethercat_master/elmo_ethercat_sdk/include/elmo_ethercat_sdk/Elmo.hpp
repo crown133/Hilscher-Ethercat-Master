@@ -42,7 +42,7 @@ class Elmo : public ecat_master::EthercatDevice {
   typedef std::shared_ptr<Elmo> SharedPtr;
 
   // create Elmo Drive from setup file
-  static SharedPtr deviceFromFile(const std::string& configFile, const std::string& name, const uint32_t address);
+  static SharedPtr deviceFromFile(const std::string& configFile, const std::string& name, const uint32_t address,const uint32_t stationAddress);
   // constructor
   Elmo() = default;
   Elmo(const std::string& name, const uint32_t address, const uint32_t stationAddress);

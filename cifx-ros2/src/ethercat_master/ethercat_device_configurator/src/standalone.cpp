@@ -139,13 +139,13 @@ void worker()
                 if(elmo_slave_ptr->lastPdoStateChangeSuccessful() && elmo_slave_ptr->getReading().getDriveState() == elmo::DriveState::OperationEnabled)
                 {
                     elmo::Command command;
-                    // command.setModeOfOperation(elmo::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
-                    // command.setTargetTorque(0.0);
+                    command.setModeOfOperation(elmo::ModeOfOperationEnum::CyclicSynchronousTorqueMode);
+                    command.setTargetTorque(0.0);
                     // command.setTargetVelocity(0);
                     // std::cout<<1111<<std::endl;
 
-                    command.setModeOfOperation(elmo::ModeOfOperationEnum::CyclicSynchronousPositionMode);
-                    command.setTargetPosition(0);
+                    // command.setModeOfOperation(elmo::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                    // command.setTargetPosition(0);
 
                     elmo_slave_ptr->stageCommand(command);
                 }

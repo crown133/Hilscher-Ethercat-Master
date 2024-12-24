@@ -16,7 +16,7 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 set(dependencies
-  soem_interface
+  cifx_interface
   Threads
 )
 
