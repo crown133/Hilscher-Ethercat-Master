@@ -259,6 +259,16 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
     //   return false;
     // }
 
+    uint32_t rxPdoId = 0;
+    uint32_t txPdoId = 0;
+    for (const auto& slave : slaves_) {
+      slave->setPdoId(rxPdoId, txPdoId);
+
+      rxPdoId += slave->getCurrentPdoInfo().rxPdoSize_;
+      txPdoId += slave->getCurrentPdoInfo().txPdoSize_;
+    }
+ 
+
     //Todo：Initialize slaves in host application instead of netx firmware
     // Initialize the communication interfaces of all slaves.
     for (auto& slave : slaves_) {

@@ -100,6 +100,8 @@ class EthercatSlaveBase {
    */
   virtual PdoInfo getCurrentPdoInfo() const = 0;
 
+  virtual void setPdoId(int rxPdoId, int txPdoId) = 0;
+
   /**
    * @brief      Set EthercatBusBase pointer
    */

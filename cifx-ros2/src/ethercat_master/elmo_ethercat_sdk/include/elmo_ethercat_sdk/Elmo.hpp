@@ -54,6 +54,10 @@ class Elmo : public ecat_master::EthercatDevice {
   void updateWrite() override;
   void updateRead() override;
   PdoInfo getCurrentPdoInfo() const override { return pdoInfo_; }
+  void setPdoId(int rxPdoId, int txPdoId) {
+    pdoInfo_.rxPdoId_ = rxPdoId;
+    pdoInfo_.txPdoId_ = txPdoId;
+  }
 
  public:
   void stageCommand(const Command& command);

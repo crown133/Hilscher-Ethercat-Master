@@ -13,7 +13,7 @@ set(dependencies
 # find dependencies
 find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${dependencies})
-  find_package(${Dependency} REQUIRED)
+find_package(${Dependency} REQUIRED)
 endforeach()
 
 include_directories(
