@@ -91,7 +91,7 @@ void worker()
          */
         for(const auto & master: configurator->getMasters() )
         {
-            master->update(ecat_master::UpdateMode::StandaloneEnforceRate); // TODO fix the rate compensation (Elmo reliability problem)!!
+            master->update(ecat_master::UpdateMode::StandaloneEnforceStep); // TODO fix the rate compensation (Elmo reliability problem)!!
         }
 
         /*

@@ -23,6 +23,10 @@
 #include <cifx_interface/EthercatBusBase.hpp>
 #include <cifx_interface/EthercatSlaveBase.hpp>
 
+#include <thread>
+#include <chrono>
+#include <iostream>
+
 namespace cifx_interface {
 
 EthercatBusBase::EthercatBusBase(const std::string& name, bool verbose) : name_(name), 
@@ -38,7 +42,7 @@ bool EthercatBusBase::busIsAvailable(const std::string& name) {
   CIFXHANDLE hDriver = NULL;
   int32_t    lRet    = xDriverOpen(&hDriver);
 
-  printf("---------- Board Checking ----------\r\n");
+  printf("---------- Board %s Checking ----------\r\n", name.c_str());
 
   if(CIFX_NO_ERROR == lRet)
   {
@@ -259,15 +263,30 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
     //   return false;
     // }
 
-    uint32_t rxPdoId = 0;
-    uint32_t txPdoId = 0;
     for (const auto& slave : slaves_) {
       slave->setPdoId(rxPdoId, txPdoId);
 
       rxPdoId += slave->getCurrentPdoInfo().rxPdoSize_;
       txPdoId += slave->getCurrentPdoInfo().txPdoSize_;
     }
- 
+
+    //TODO: change the size of the IO mapping accroding to the actual size
+    // ioRecvData_.reset(new unsigned char[rxPdoId]);
+    // ioSendData_.reset(new unsigned char[txPdoId]);
+    MELO_INFO_STREAM("Slave PdoID have been configured");
+
+    unsigned long ulState;
+    if(CIFX_NO_ERROR != xChannelBusState(hChannel, CIFX_BUS_STATE_ON,(uint32_t*) &ulState, 10000))
+    {
+      MELO_ERROR_STREAM("[" << getName() << "] "
+                            << "Error setting Bus state" << ulState);
+      xChannelClose(hChannel);
+      xDriverClose(hDriver);
+      return false;
+    }
+    
+    // wait the cifx initialization
+    std::this_thread::sleep_for(std::chrono::seconds(5));
 
     //Todo：Initialize slaves in host application instead of netx firmware
     // Initialize the communication interfaces of all slaves.
@@ -278,9 +297,10 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
         return false;
       }
     }
+    MELO_INFO_STREAM("Bus " << getName() << ":slave startup have been finished");
 
     // Check if the size of the IO mapping fits our slaves.
-    bool ioMapIsOk = true;
+    // bool ioMapIsOk = true;
     // do this check only if 'sizeCheck' is true
     // if (sizeCheck) {
       // for (const auto& slave : slaves_) {
@@ -304,20 +324,10 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
       // }
     // }
 
-    auto pdoRXSize = 0;
-    auto pdoTXSize = 0;
-    for (const auto& slave : slaves_) {
-      const EthercatSlaveBase::PdoInfo pdoInfo = slave->getCurrentPdoInfo();
-      pdoRXSize += pdoInfo.rxPdoSize_;
-      pdoTXSize += pdoInfo.txPdoSize_;
-    }
-    //TODO: change the size of the IO mapping accroding to the actual size
-    // ioRecvData_.reset(new unsigned char[pdoRXSize]);
-    // ioSendData_.reset(new unsigned char[pdoTXSize]);
 
-    if (!ioMapIsOk) {
-      return false;
-    }
+    // if (!ioMapIsOk) {
+    //   return false;
+    // }
 
     // Initialize the memory with zeroes.
     // for (int slave = 1; slave <= getNumberOfSlaves(); slave++) {
@@ -326,20 +336,10 @@ bool EthercatBusBase::startup(const bool sizeCheck) {
     // }
 
     initlialized_ = true;
-
-    unsigned long ulState;
-    if(CIFX_NO_ERROR != xChannelBusState(hChannel, CIFX_BUS_STATE_ON,(uint32_t*) &ulState, 10000))
-    {
-      MELO_ERROR_STREAM("[" << getName() << "] "
-                            << "Error setting Bus state");
-      xChannelClose(hChannel);
-      xDriverClose(hDriver);
-      return false;
-    }
-
     return true;
 }
 
+bool first_read = true;
 void EthercatBusBase::updateRead() {
   if (!sentProcessData_) {
     MELO_DEBUG_STREAM("No process data to read.");
@@ -352,6 +352,15 @@ void EthercatBusBase::updateRead() {
   {
     MELO_ERROR_STREAM("Error reading IO Data area!\r\n");
   }
+  // if(first_read) {
+  //   std::cout << " ioRecvData_: " ;
+  //   for(int i=0; i<20; i++)
+  //   std::cout << std::hex << static_cast<int>(ioRecvData_[i]) << " ";
+
+  //   std::cout << std::endl;
+  //   // first_read = false;
+  // }
+
   sentProcessData_ = false;
 
   //! Each slave attached to this bus reads its data to the buffer.
@@ -372,7 +381,8 @@ void EthercatBusBase::updateWrite() {
 
   //! Send the EtherCAT data.
   updateWriteStamp_ = std::chrono::high_resolution_clock::now();
-  // std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+
   if(CIFX_NO_ERROR != xChannelIOWrite(hChannel, 0, 0, sizeof(ioSendData_), ioSendData_, 10))
   {
     MELO_ERROR_STREAM("Error writing to IO Data area!\r\n");
@@ -415,7 +425,7 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
   CIFX_PACKET tRecvPkt       = {{0}};
 
   if(slave == 0) {
-    ECM_IF_SET_MASTER_TARGET_STATE_REQ_T master_stateSetReq;
+    ECM_IF_SET_MASTER_TARGET_STATE_REQ_T master_stateSetReq = {{0}};
     master_stateSetReq.tHead.ulCmd = ECM_IF_CMD_SET_MASTER_TARGET_STATE_REQ;
     master_stateSetReq.tHead.ulLen = 1;
     master_stateSetReq.tHead.ulDest = 0x20;
@@ -425,12 +435,12 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
     // memcpy(&tSendPkt.abData, &master_stateSetReq.tData, sizeof(master_stateSetReq.tData));
     memcpy(&tSendPkt, &master_stateSetReq, sizeof(master_stateSetReq));
    
-    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
+    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 20)))
     {
       MELO_ERROR_STREAM("Master state set failed, Error sending packet to device " << lRet);
     } else {
-      ECM_IF_SET_MASTER_TARGET_STATE_CNF_T master_stateSetCnf;
-      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateSetCnf), &tRecvPkt, 20)) )
+      ECM_IF_SET_MASTER_TARGET_STATE_CNF_T master_stateSetCnf = {{0}};
+      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateSetCnf), &tRecvPkt, 200)) )
       {
         MELO_ERROR_STREAM("Error getting state from master " << lRet);
       }
@@ -438,7 +448,7 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
     }
   }
   else if(slave > 0) {
-    ECM_IF_SET_SLAVE_TARGET_STATE_REQ_T slave_stateSetReq;
+    ECM_IF_SET_SLAVE_TARGET_STATE_REQ_T slave_stateSetReq = {{0}};
     slave_stateSetReq.tHead.ulCmd = ECM_IF_CMD_SET_SLAVE_TARGET_STATE_REQ;
     slave_stateSetReq.tHead.ulLen = 3;
     slave_stateSetReq.tHead.ulDest = 0x20;
@@ -449,12 +459,12 @@ void EthercatBusBase::setState(const uint16_t state, const uint16_t slave) {
     // memcpy(&tSendPkt.abData, &slave_stateSetReq.tData, sizeof(slave_stateSetReq.tData));
     memcpy(&tSendPkt, &slave_stateSetReq, sizeof(slave_stateSetReq));
 
-    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
+    if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 20)))
     {
       MELO_ERROR_STREAM("Slave state set failed, Error sending packet to device " << lRet);
     } else {
-      ECM_IF_SET_SLAVE_TARGET_STATE_CNF_T slave_stateSetCnf;
-      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateSetCnf), &tRecvPkt, 20)) )
+      ECM_IF_SET_SLAVE_TARGET_STATE_CNF_T slave_stateSetCnf = {{0}};
+      if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateSetCnf), &tRecvPkt, 200)) )
       {
         MELO_ERROR_STREAM("Error getting state from slave " << lRet);
       }
@@ -473,7 +483,7 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
     CIFX_PACKET tRecvPkt       = {{0}};
 
     if(slave == 0) {
-      ECM_IF_GET_MASTER_CURRENT_STATE_REQ_T master_stateGetReq;
+      ECM_IF_GET_MASTER_CURRENT_STATE_REQ_T master_stateGetReq = {{0}};
       master_stateGetReq.tHead.ulCmd = ECM_IF_CMD_GET_MASTER_CURRENT_STATE_REQ;
       master_stateGetReq.tHead.ulLen = 0;
       master_stateGetReq.tHead.ulDest = 0x20;
@@ -481,12 +491,12 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
       // memcpy(&tSendPkt.abData, &master_stateGetReq.tData, sizeof(master_stateGetReq.tData));
       memcpy(&tSendPkt, &master_stateGetReq, sizeof(master_stateGetReq));
 
-      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
+      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 20)))
       {
         MELO_ERROR_STREAM("Master state get failed, Error sending packet to device " << lRet);
       } else {
-        ECM_IF_GET_MASTER_CURRENT_STATE_CNF_T master_stateGetCnf;
-        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateGetCnf), &tRecvPkt, 20)) )
+        ECM_IF_GET_MASTER_CURRENT_STATE_CNF_T master_stateGetCnf = {{0}};
+        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(master_stateGetCnf), &tRecvPkt, 200)) )
         {
           MELO_ERROR_STREAM("Error getting state from master " << lRet);
         }
@@ -496,10 +506,10 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
           return true;
         }
       }
-      MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been set.");
+      MELO_DEBUG_STREAM("Master " << name_ << ": State " << state << " has been waited.");
     }
     else if(slave > 0) {
-      ECM_IF_GET_SLAVE_CURRENT_STATE_REQ_T slave_stateGetReq;
+      ECM_IF_GET_SLAVE_CURRENT_STATE_REQ_T slave_stateGetReq = {{0}};
       slave_stateGetReq.tHead.ulCmd = ECM_IF_CMD_GET_SLAVE_CURRENT_STATE_REQ;
       slave_stateGetReq.tHead.ulLen = 2;
       slave_stateGetReq.tHead.ulDest = 0x20;
@@ -509,12 +519,12 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
       // memcpy(&tSendPkt.abData, &slave_stateGetReq.tData, sizeof(slave_stateGetReq.tData));
       memcpy(&tSendPkt, &slave_stateGetReq, sizeof(slave_stateGetReq));
 
-      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 10)))
+      if(CIFX_NO_ERROR != (lRet = xChannelPutPacket(hChannel, &tSendPkt, 20)))
       {
         MELO_ERROR_STREAM("Slave state set failed, Error sending packet to device " << lRet);
       } else {
-        ECM_IF_GET_SLAVE_CURRENT_STATE_CNF_T slave_stateGetCnf;
-        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateGetCnf), &tRecvPkt, 20)) )
+        ECM_IF_GET_SLAVE_CURRENT_STATE_CNF_T slave_stateGetCnf = {{0}};
+        if(CIFX_NO_ERROR != (lRet = xChannelGetPacket(hChannel, sizeof(slave_stateGetCnf), &tRecvPkt, 200)) )
         {
           MELO_ERROR_STREAM("Error getting state from slave " << lRet);
         }
@@ -524,7 +534,7 @@ bool EthercatBusBase::waitForState(const uint16_t state, const uint16_t slave, c
           return true;
         }
       }
-      MELO_DEBUG_STREAM("Slave " << slave << ": State " << state << " has been set.");
+      MELO_DEBUG_STREAM("Slave " << slave << " : State " << state << " has been waited.");
     }
     struct timespec ts;
     ts.tv_sec = static_cast<time_t>(retrySleep); //retrySleep = s

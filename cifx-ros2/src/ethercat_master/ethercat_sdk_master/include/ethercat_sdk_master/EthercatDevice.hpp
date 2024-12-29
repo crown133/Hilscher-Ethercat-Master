@@ -94,8 +94,10 @@ public:
     Value testVal;
     bool success = true;
     success &= sendSdoWrite(index, subindex, completeAccess, value);
+
     std::this_thread::sleep_for(std::chrono::microseconds(static_cast<unsigned int>(delay)));
     success &= sendSdoRead(index, subindex, completeAccess, testVal);
+
     return (success & (value == testVal));
   }
 

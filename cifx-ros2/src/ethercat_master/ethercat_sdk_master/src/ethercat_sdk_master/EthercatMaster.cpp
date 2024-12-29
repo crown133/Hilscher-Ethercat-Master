@@ -62,14 +62,25 @@ bool EthercatMaster::startup(){
   bool success = true;
 
   success &= bus_->startup(false);
+  
+  MELO_INFO_STREAM("All Bus startup have been finished");
 
+  // for(const auto & device : devices_)
+  // {
+  //   if(!bus_->waitForState(ECM_IF_STATE_SAFEOP, device->getAddress(), 50, 0.05))
+  //     MELO_ERROR("not in safe op after satrtup!");
+  //   bus_->setState(ECM_IF_STATE_OP, device->getAddress());
+  //   success &= bus_->waitForState(ECM_IF_STATE_OP, device->getAddress(), 50, 0.05);
+  // }
   for(const auto & device : devices_)
   {
-    if(!bus_->waitForState(ECM_IF_STATE_SAFEOP, device->getAddress(), 50, 0.05))
-      MELO_ERROR("not in safe op after satrtup!");
-    bus_->setState(ECM_IF_STATE_OP, device->getAddress());
+    // if(!bus_->waitForState(ECM_IF_STATE_SAFEOP, device->getAddress(), 50, 0.05))
+    //   MELO_ERROR("not in safe op after satrtup!");
+    // bus_->setState(ECM_IF_STATE_OP, device->getAddress());
     success &= bus_->waitForState(ECM_IF_STATE_OP, device->getAddress(), 50, 0.05);
   }
+
+  MELO_INFO_STREAM("slave state OP startup have been finished");
 
   if(!success)
     MELO_ERROR("[ethercat_sdk_master:EthercatMaster::startup] Startup not successful.");
@@ -80,6 +91,10 @@ void EthercatMaster::update(UpdateMode updateMode){
   if(firstUpdate_){
     clock_gettime(CLOCK_MONOTONIC, &lastWakeup_);
     sleepEnd_ = lastWakeup_;
+  
+    bus_->updateWrite();
+    bus_->updateRead(); // read once to clear zero
+
     firstUpdate_ = false;
   }
   bus_->updateWrite();

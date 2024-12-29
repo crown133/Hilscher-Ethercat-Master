@@ -71,11 +71,12 @@ Elmo::Elmo(const std::string& name, const uint32_t address, const uint32_t stati
 bool Elmo::startup() {
   bool success = true;
   //todo: set the slave state to EC_STATE_PRE_OP
-  success &= bus_->waitForState(ECM_IF_STATE_PREOP, address_, 50, 0.05);
+  // success &= bus_->waitForState(ECM_IF_STATE_PREOP, address_, 50, 0.05);
+
   // todo: note the dc shift time which was configured in syscon.net
   // bus_->syncDistributedClock0(address_, true, timeStep_, timeStep_ / 2.f);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
+  
   // use hardware motor rated current value if necessary
   if (configuration_.motorRatedCurrentA == 0.0) {
     uint32_t motorRatedCurrent;
@@ -85,8 +86,9 @@ bool Elmo::startup() {
     // update the reading_ object to ensure correct unit conversion
     reading_.configureReading(configuration_);
   }
-  success &= setDriveStateViaSdo(DriveState::ReadyToSwitchOn);
 
+  success &= setDriveStateViaSdo(DriveState::ReadyToSwitchOn);
+  
   // PDO mapping // which has been set by netx firmware
   // success &= mapPdos(configuration_.rxPdoTypeEnum, configuration_.txPdoTypeEnum);
 
@@ -99,6 +101,7 @@ bool Elmo::startup() {
   // write the motor rated current / torque to the drives
   uint32_t motorRatedCurrent = static_cast<uint32_t>(round(1000.0 * configuration_.motorRatedCurrentA));
   success &= sdoVerifyWrite(OD_INDEX_MOTOR_RATED_CURRENT, 0, false, motorRatedCurrent);
+
   success &= sdoVerifyWrite(OD_INDEX_MOTOR_RATED_TORQUE, 0, false, motorRatedCurrent);
 
   // Write maximum current to drive
@@ -156,7 +159,8 @@ void Elmo::updateWrite() {
       }
 
       // actually writing to the hardware
-      bus_->writeRxPdo(address_, rxPdo);
+      // bus_->writeRxPdo(address_, rxPdo);
+      bus_->writeRxPdo(pdoInfo_.rxPdoId_, rxPdo);
     } break;
     case RxPdoTypeEnum::RxPdoCST: {
       RxPdoCST rxPdo{};
@@ -168,7 +172,8 @@ void Elmo::updateWrite() {
         rxPdo.torqueSlope_ = stagedCommand_.getTorqueSlopeRaw();
       }
       // actually writing to the hardware
-      bus_->writeRxPdo(address_, rxPdo);
+      // bus_->writeRxPdo(address_, rxPdo);
+      bus_->writeRxPdo(pdoInfo_.rxPdoId_, rxPdo);
     } break;
 
     default:
@@ -181,19 +186,20 @@ void Elmo::updateRead() {
     case TxPdoTypeEnum::TxPdoStandard: {
       TxPdoStandard txPdo{};
       // reading from the bus
-      bus_->readTxPdo(address_, txPdo);
+      // bus_->readTxPdo(address_, txPdo);
+      bus_->readTxPdo(pdoInfo_.txPdoId_, txPdo);
       reading_.setActualPosition(txPdo.actualPosition_ * configuration_.direction);
       reading_.setDigitalInputs(txPdo.digitalInputs_);
       reading_.setActualVelocity(txPdo.actualVelocity_ * configuration_.direction);
       reading_.setStatusword(txPdo.statusword_);
-      reading_.setAnalogInput(txPdo.analogInput_);
       reading_.setActualCurrent(txPdo.actualCurrent_ * configuration_.direction);
       reading_.setBusVoltage(txPdo.busVoltage_);
     } break;
     case TxPdoTypeEnum::TxPdoCST: {
       TxPdoCST txPdo{};
       // reading from the bus
-      bus_->readTxPdo(address_, txPdo);
+      // bus_->readTxPdo(address_, txPdo);
+      bus_->readTxPdo(pdoInfo_.txPdoId_, txPdo);
       reading_.setActualPosition(txPdo.actualPosition_ * configuration_.direction);
       reading_.setAuxiliaryPosition(txPdo.auxiliaryPosition_ * configuration_.direction);
       reading_.setActualCurrent(txPdo.actualTorque_ * configuration_.direction);  /// torque readings are actually current readings,
@@ -211,6 +217,7 @@ void Elmo::updateRead() {
   if (reading_.getDriveState() == DriveState::Fault) {
     MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::updateRead] '" << name_ << "' is in drive state 'Fault'");
   }
+
 }
 
 void Elmo::stageCommand(const Command& command) {
@@ -293,7 +300,9 @@ Configuration Elmo::getConfiguration() const {
 bool Elmo::getStatuswordViaSdo(Statusword& statusword) {
   uint16_t statuswordValue = 0;
   bool success = sendSdoRead(OD_INDEX_STATUSWORD, 0, false, statuswordValue);
+
   statusword.setFromRawStatusword(statuswordValue);
+
   return success;
 }
 
@@ -304,7 +313,9 @@ bool Elmo::setControlwordViaSdo(Controlword& controlword) {
 bool Elmo::setDriveStateViaSdo(const DriveState& driveState) {
   bool success = true;
   Statusword currentStatusword;
+
   success &= getStatuswordViaSdo(currentStatusword);
+
   DriveState currentDriveState = currentStatusword.getDriveState();
 
   // do the adequate state changes (via sdo) depending on the requested and
@@ -611,15 +622,12 @@ bool Elmo::mapPdos(RxPdoTypeEnum rxPdoTypeEnum, TxPdoTypeEnum txPdoTypeEnum) {
           sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 1, false, static_cast<uint16_t>(0x1a03), configuration_.configRunSdoVerifyTimeout);
       std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
       txSuccess &=
-          sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 2, false, static_cast<uint16_t>(0x1a1d), configuration_.configRunSdoVerifyTimeout);
+          sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 2, false, static_cast<uint16_t>(0x1a1f), configuration_.configRunSdoVerifyTimeout);
       std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
       txSuccess &=
-          sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 3, false, static_cast<uint16_t>(0x1a1f), configuration_.configRunSdoVerifyTimeout);
+          sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 3, false, static_cast<uint16_t>(0x1a18), configuration_.configRunSdoVerifyTimeout);
       std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
-      txSuccess &=
-          sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 4, false, static_cast<uint16_t>(0x1a18), configuration_.configRunSdoVerifyTimeout);
-      std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
-      txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(4), configuration_.configRunSdoVerifyTimeout);
+      txSuccess &= sdoVerifyWrite(OD_INDEX_TX_PDO_ASSIGNMENT, 0, false, static_cast<uint8_t>(3), configuration_.configRunSdoVerifyTimeout);
       std::this_thread::sleep_for(std::chrono::microseconds(configuration_.configRunSdoVerifyTimeout));
       break;
 
@@ -759,7 +767,9 @@ Controlword Elmo::getNextStateTransitionControlword(const DriveState& requestedD
           break;
         default:
           MELO_ERROR_STREAM("[elmo_ethercat_sdk:Elmo::getNextStateTransitionControlword] "
-                            << "PDO state transition not implemented for '" << name_ << "'");
+                            << " Current State: " << currentDriveState
+                            << " PDO state transition not implemented for '" << name_ << "'");
+
       }
       break;
 

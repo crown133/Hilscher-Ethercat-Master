@@ -40,9 +40,6 @@ struct TxPdoStandard  // Size:
   int32_t actualVelocity_;
   uint16_t statusword_;
 
-  // 0x1a1d
-  int16_t analogInput_;
-
   // 0x1a1f
   int16_t actualCurrent_;
 

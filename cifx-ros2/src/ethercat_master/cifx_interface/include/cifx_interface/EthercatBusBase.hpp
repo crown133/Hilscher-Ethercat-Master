@@ -199,6 +199,37 @@ class EthercatBusBase {
    */
   PdoSizeMap getHardwarePdoSizes();
 
+  // void DumpData(unsigned char* pbData, unsigned long ulDataLen)
+  // {
+  //   unsigned long ulIdx;
+  // #ifdef DEBUG
+  //   printf("%s() called\n", __FUNCTION__);
+  // #endif
+  //   for(ulIdx = 0; ulIdx < ulDataLen; ++ulIdx)
+  //   {
+  //     if(0 == (ulIdx % 16))
+  //       printf("\r\n");
+
+  //     printf("%02X ", pbData[ulIdx]);
+  //   }
+  //   printf("\r\n");
+  // }
+
+  // void DumpPacket(CIFX_PACKET* ptPacket)
+  // {
+  // #ifdef DEBUG
+  //   printf("%s() called\n", __FUNCTION__);
+  // #endif
+  //   printf("Dest   : 0x%08lX      ID   : 0x%08lX\r\n",(long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulDest),  (long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulId));
+  //   printf("Src    : 0x%08lX      Sta  : 0x%08lX\r\n",(long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulSrc),   (long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulState));
+  //   printf("DestID : 0x%08lX      Cmd  : 0x%08lX\r\n",(long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulDestId),(long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulCmd));
+  //   printf("SrcID  : 0x%08lX      Ext  : 0x%08lX\r\n",(long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulSrcId), (long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulExt));
+  //   printf("Len    : 0x%08lX      Rout : 0x%08lX\r\n",(long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulLen),   (long unsigned int)HOST_TO_LE32(ptPacket->tHeader.ulRout));
+
+  //   printf("Data:");
+  //   DumpData(ptPacket->abData, HOST_TO_LE32(ptPacket->tHeader.ulLen));
+  // }
+
   /*!
    * Returns a pair with the TxPdo and RxPdo sizes for the requested address
    * Overloads the "PdoSizeMap getHardwarePdoSizes()" method.
@@ -226,7 +257,7 @@ class EthercatBusBase {
     CIFX_PACKET tSendPkt       = {{0}};
     CIFX_PACKET tRecvPkt       = {{0}};
 
-    ECM_IF_COE_SDO_DOWNLOAD_REQ_T sdoWriteReq;
+    ECM_IF_COE_SDO_DOWNLOAD_REQ_T sdoWriteReq = {{0}};
     sdoWriteReq.tHead.ulDest = 0x20;
     sdoWriteReq.tHead.ulLen = 18 + size;
     sdoWriteReq.tHead.ulCmd = ECM_IF_CMD_COE_SDO_DOWNLOAD_REQ;
@@ -240,26 +271,27 @@ class EthercatBusBase {
     }
     sdoWriteReq.tData.fCompleteAccess = static_cast<bool>(completeAccess);
     sdoWriteReq.tData.ulTotalBytes = size;
-    sdoWriteReq.tData.ulTimeoutMs = 10;
+    sdoWriteReq.tData.ulTimeoutMs = 1000;
     memcpy(sdoWriteReq.tData.abData, &value, sizeof(Value));
 
     // tSendPkt.tHeader = sdoWriteReq.tHead;
     // memcpy(&tSendPkt.abData, &sdoWriteReq.tData, sizeof(sdoWriteReq.tData));
     memcpy(&tSendPkt, &sdoWriteReq, sizeof(sdoWriteReq));
 
-    if(CIFX_NO_ERROR != xChannelPutPacket(hChannel, &tSendPkt, 10))
+    if(CIFX_NO_ERROR != xChannelPutPacket(hChannel, &tSendPkt, 20))
     {
-      MELO_ERROR_STREAM("Error sending packet to device!");
+      MELO_ERROR_STREAM("SDO Write: Error sending packet to device!");
       return false;
     } else
     {
-      ECM_IF_COE_SDO_DOWNLOAD_CNF_T sdoWriteCnf;
+      ECM_IF_COE_SDO_DOWNLOAD_CNF_T sdoWriteCnf = {{0}};
 
-      if(CIFX_NO_ERROR != xChannelGetPacket(hChannel, sizeof(sdoWriteCnf), &tRecvPkt, 20))
+      if(CIFX_NO_ERROR != xChannelGetPacket(hChannel, sizeof(sdoWriteCnf), &tRecvPkt, 200))
       {
-        MELO_ERROR_STREAM("Error getting packet from device!");
+        MELO_ERROR_STREAM("SDO Write: Error getting packet from device!");
         return false;
       } 
+      // DumpPacket(&tRecvPkt);
     }
 
     return true;
@@ -282,7 +314,7 @@ class EthercatBusBase {
     CIFX_PACKET tSendPkt       = {{0}};
     CIFX_PACKET tRecvPkt       = {{0}};
 
-    ECM_IF_COE_SDO_UPLOAD_REQ_T sdoReadReq;
+    ECM_IF_COE_SDO_UPLOAD_REQ_T sdoReadReq = {{0}};
     sdoReadReq.tHead.ulDest = 0x20;
     sdoReadReq.tHead.ulLen = 18;
     sdoReadReq.tHead.ulCmd = ECM_IF_CMD_COE_SDO_UPLOAD_REQ;
@@ -295,25 +327,27 @@ class EthercatBusBase {
       sdoReadReq.tData.bSubIndex = subindex;
     }
     sdoReadReq.tData.fCompleteAccess = static_cast<bool>(completeAccess);
-    sdoReadReq.tData.ulTimeoutMs = 10;
+    sdoReadReq.tData.ulTimeoutMs = 1000;
     sdoReadReq.tData.ulMaxTotalBytes = MAX_SDO_SIZE;
 
     // tSendPkt.tHeader = sdoReadReq.tHead;
     // memcpy(&tSendPkt.abData, &sdoReadReq.tData, sizeof(sdoReadReq.tData));
     memcpy(&tSendPkt, &sdoReadReq, sizeof(sdoReadReq));
 
-    if(CIFX_NO_ERROR != xChannelPutPacket(hChannel, &tSendPkt, 10))
+    if(CIFX_NO_ERROR != xChannelPutPacket(hChannel, &tSendPkt, 20))
     {
-      MELO_ERROR_STREAM("Error sending packet to device!");
+      MELO_ERROR_STREAM("SDO Read: Error sending packet to device!");
       return false;
     } else
     {
-      ECM_IF_COE_SDO_UPLOAD_CNF_T sdoReadCnf;
-      if(CIFX_NO_ERROR != xChannelGetPacket(hChannel, sizeof(sdoReadCnf), &tRecvPkt, 20))
+      ECM_IF_COE_SDO_UPLOAD_CNF_T sdoReadCnf = {{0}};
+      if(CIFX_NO_ERROR != xChannelGetPacket(hChannel, sizeof(sdoReadCnf), &tRecvPkt, 200))
       {
-        MELO_ERROR_STREAM("Error getting packet from device!");
+        MELO_ERROR_STREAM("SDO Read: Error getting packet from device!");
         return false;
       } 
+      // DumpPacket(&tRecvPkt);
+
       memcpy(&sdoReadCnf.tData, tRecvPkt.abData, sizeof(sdoReadCnf.tData));
       if(sdoReadCnf.tData.usStationAddress != slave_station_address) //slaves_[slave]->getStationAddress())
       {
@@ -332,17 +366,42 @@ class EthercatBusBase {
    */
   bool busIsOk() const;
 
+  // /*!
+  //  * Read a TxPDO from the buffer.
+  //  * @param slave Address of the slave.
+  //  * @param txPdo Return argument, TxPDO container.
+  //  */
+  // template <typename TxPdo>
+  // void readTxPdo(const uint16_t slave, TxPdo& txPdo) const {
+  //   assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  //   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  //   assert(sizeof(TxPdo) == ecatContext_.slavelist[slave].Ibytes);
+  //   memcpy(&txPdo, ecatContext_.slavelist[slave].inputs, sizeof(TxPdo));
+  // }
+
+  // /*!
+  //  * Write an RxPDO to the buffer.
+  //  * @param slave Address of the slave.
+  //  * @param rxPdo RxPDO container.
+  //  */
+  // template <typename RxPdo>
+  // void writeRxPdo(const uint16_t slave, const RxPdo& rxPdo) {
+  //   assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  //   std::lock_guard<std::recursive_mutex> guard(contextMutex_);
+  //   assert(sizeof(RxPdo) == ecatContext_.slavelist[slave].Obytes);
+  //   memcpy(ecatContext_.slavelist[slave].outputs, &rxPdo, sizeof(RxPdo));
+  // }
+
   /*!
    * Read a TxPDO from the buffer.
    * @param slave Address of the slave.
    * @param txPdo Return argument, TxPDO container.
    */
   template <typename TxPdo>
-  void readTxPdo(const uint16_t slave, TxPdo& txPdo) const {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  void readTxPdo(const uint16_t index, TxPdo& txPdo) const {
     std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-    // assert(sizeof(TxPdo) == ecatContext_.slavelist[slave].Ibytes);
-    // memcpy(&txPdo, ecatContext_.slavelist[slave].inputs, sizeof(TxPdo));
+    assert(index <= txPdoId);
+    memcpy(&txPdo, &(ioRecvData_[index]), sizeof(TxPdo));
   }
 
   /*!
@@ -351,11 +410,10 @@ class EthercatBusBase {
    * @param rxPdo RxPDO container.
    */
   template <typename RxPdo>
-  void writeRxPdo(const uint16_t slave, const RxPdo& rxPdo) {
-    assert(static_cast<int>(slave) <= getNumberOfSlaves());
+  void writeRxPdo(const uint16_t index, const RxPdo& rxPdo) {
     std::lock_guard<std::recursive_mutex> guard(contextMutex_);
-    // assert(sizeof(RxPdo) == ecatContext_.slavelist[slave].Obytes);
-    // memcpy(ecatContext_.slavelist[slave].outputs, &rxPdo, sizeof(RxPdo));
+    assert(index <= rxPdoId);
+    memcpy(&(ioSendData_[index]), &rxPdo, sizeof(RxPdo));
   }
 
  protected:
@@ -382,7 +440,7 @@ class EthercatBusBase {
   unsigned long poll_interval_ = 0; 
 
   /*!< Poll thread priority */ 
-  int poll_priority_;  
+  int poll_priority_ = 0;  
   
   /*!< see TRACE_LVL_XXX defines in cifX Device Driver - Linux DRV 15 EN Page 33*/
   // Trace Level = 0x00 Tracing disabled
@@ -394,14 +452,14 @@ class EthercatBusBase {
   unsigned long trace_level_ = 0;    
   
   /*!< Number of user defined cards */
-  int user_card_cnt_; 
+  int user_card_cnt_ = 0; 
 
   /*!< Pointer to Array of user cards (must be user_card_cnt long) */
   struct CIFX_DEVICE_T* user_cards_ = nullptr;
 
-  int iCardNumber_;
+  int iCardNumber_ = 0;
 
-  int fEnableCardLocking_;
+  int fEnableCardLocking_ = 0;
   /*!< Stack size of polling thread */
   int poll_StackSize_ = 0; //set to 0 to use default 
 
@@ -411,12 +469,14 @@ class EthercatBusBase {
 // Note: does not use dynamic memory allocation (new/delete). Therefore
 //   // all context pointers must be null or point to an existing member.
   struct CIFX_LINUX_INIT cifx_init_ = {init_options_,
+
                                        base_dir_, 
                                        poll_interval_,
                                        poll_priority_,
                                        trace_level_,
                                        user_card_cnt_,
                                        user_cards_, 
+
                                        iCardNumber_,
                                        fEnableCardLocking_, 
                                        poll_StackSize_,
@@ -441,9 +501,12 @@ class EthercatBusBase {
 
   // EtherCAT input/output mapping of the slaves within the datagrams.
   char ioMap_[4096];
-  unsigned char ioRecvData_[4096];
-  unsigned char ioSendData_[4096];
+  unsigned char ioRecvData_[30];
+  unsigned char ioSendData_[30];
 
+  uint32_t rxPdoId = 0;
+  uint32_t txPdoId = 0;
+  
   //! Board Information structure                                     
   char       abBoardName[CIFx_MAX_INFO_NAME_LENTH];        /*!< Global board name              */
   char       abBoardAlias[CIFx_MAX_INFO_NAME_LENTH];       /*!< Global board alias name        */
