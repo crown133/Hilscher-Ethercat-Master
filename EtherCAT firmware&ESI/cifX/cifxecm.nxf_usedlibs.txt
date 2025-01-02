@@ -1,0 +1,62 @@
+Target:  cifxecm.nxf
+Version: V4.5.0.14
+
+Used Libraries
+==============
+
+
+
+liblfw_master_netx100.a         V4.5.0.14 LFW 
+
+arm-none-eabi/4.5.2
+-------------------
+libcgl_cache_netx100.a          V1.2.0.1  libcglcache 
+libcglarm.a                     V1.2.0.1  libcglarm 
+libconfigmanager.a              V1.3.2.0  ConfigManager 
+libecmacfg.a                    V4.5.0.14 libecmacfg 
+libecmaoeclient.a               V4.5.0.14 libecmaoeclient 
+libecmaoerouter.a               V4.5.0.14  
+libecmbx.a                      V1.0.8.0  libecmbx 
+libecmbxcommon.a                V1.0.8.0  libecmbxcommon 
+libecmbxsdoinfoserver.a         V1.0.8.0  libecmbxsdoinfoserver 
+libecmbxsdoserver.a             V1.0.8.0  libecmbxsdoserver 
+libecmcommon.a                  V4.5.0.14 libecmcommon 
+libecmemc.a                     V4.5.0.14 libecmemc 
+libecmeoe.a                     V4.5.0.14 libecmeoe 
+libecmfoeclient.a               V4.5.0.14 libecmfoeclient 
+libecmlld.a                     V4.5.0.14 libecmlld 
+libecmmbxrouter.a               V4.5.0.14 libecmmbxrouter 
+libecmobjdict.a                 V4.5.0.14 libecmobjdict 
+libecmsdoclient.a               V4.5.0.14 libecmsdoclient 
+libecmsdoinfoclient.a           V4.5.0.14 libecmsdoinfoclient 
+libecmsdoinfoserver.a           V4.5.0.14 libecmsdoinfoserver 
+libecmsdoserver.a               V4.5.0.14 libecmsdoserver 
+libecmsoeclient.a               V4.5.0.14 libecmsoeclient 
+libodv3_api.a                   V3.4.17.0 libodv3_api 
+libps_toolbox.a                 V1.5.0.0  PS Toolbox 
+
+arm-none-eabi/4.5.2/rcX_V2.1
+----------------------------
+libecm_postmortem_netx100.a     V4.5.0.14 ECM Post Mortem Diagnosis Library
+libecmap_netx100.a              V4.5.0.14 libecmap 
+libecmaptlv.a                   V4.5.0.14 libecmaptlv 
+libecmeoeif.a                   V4.5.0.14 libecmeoeif 
+libecmif.a                      V4.5.0.14 libecmif 
+libecmlld_ecatmac_rcx_netx100.a V4.5.0.14 libecmlld_rcxCHIP 
+libethintfap.a                  V4.2.6.0  Ethernet Interface AP Task library (codesourcery Toolchain)
+libfwconfig_netx100.a           V1.0.2.0  Fw.Config library (netX100/500)
+libhal_toolbox_rcx21.a          V1.3.1.0  HAL Toolbox 
+libmarshaller.a                 V2.0.17.1 netX Marshaller 
+libosal_rcx.a                   V2.1.0.0  OSAL 
+librcx.a                        V2.1.16.1 rcX Kernel
+librcx_bas.a                    V2.1.16.1 rcX Base Firmware Add-ons
+librcx_mid.a                    V2.1.16.1 rcX Middleware
+librcx_netx100.a                V2.1.16.1 rcX netX 500 Drivers
+librcx_netx100_hif.a            V2.1.16.1 rcX netX 500 HIF/DPM Drivers
+librcx_toolbox_netx100.a        V1.10.0.0 rcX Toolbox 
+librcx_vol.a                    V2.1.16.1 rcX Volume Drivers
+libtcpip.a                      V2.4.0.7  TCPIP 
+
+Selected Environment variables
+==============================
+SPC_BUILDTOOLS_REV=SPC-BuildToolsRev.135
