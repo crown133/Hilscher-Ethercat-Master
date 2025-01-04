@@ -60,10 +60,11 @@ We tested it on two platforms:
 
 **AAEON PICO-TGU4**
 You can directly connect the cifx board to this computer via mini PCI-e.
-![alt text](<image/AAEON PICO-TGU4.jpg>){width=400}  ![alt text](<image/pico with cifx.png>){width=360}
+<img src="image/AAEON PICO-TGU4.jpg" alt="description" width="400"> <img src="image/pico with cifx.png" alt="description" width="360">
+
 **Intel NUC**
 You need to select the cifx board with M.2 interface or using M.2 to mini PCI-e Adapter Cable.
-![alt text](image/nuc.jpg){width=400} &nbsp;&nbsp;&nbsp; ![alt text](<image/m.2 to mpcie.png>){width=326}
+<img src="image/nuc.jpg" alt="description" width="400"> <img src="image/m.2 to mpcie.png" alt="description" width="326">
 
 #### 2.Linux Driver installation and building
 For Linux Driver installation, please refer to the [nxdrvlinux](https://github.com/crown133/nxdrvlinux/tree/5571118249232441bb86f5a7e55a090895a45df1).
@@ -77,7 +78,8 @@ The Software Sycon\.net which is used to create a configuration for CIFX Cards (
 
 Using the TCP Server has a lot of benefits. It guarantees that the Firmware and Configuration files will directly be copied to the right directory and it will also provide access to the protocol diagnosis. This also makes protocol troubleshooting much easier.
 
-![alt text](<image/system overview Cifx and remote connection via ethernet.png>){width=500}
+<img src="image/system overview Cifx and remote connection via ethernet.png" width="500">
+
 *System overview Cifx and remote connection via ethernet.*
 
 ##### Driver installation and Network settings
@@ -122,31 +124,32 @@ You can refer [this](documents/HK-CIFX板卡作为EtherCAT主站的基本使用�
 
 ##### Adding the Slave's ESI File into SYSCON\.net 
 Adding the [Elmo](<EtherCAT firmware&ESI/ESI/Elmo ECAT 00010420 V11.xml>) and [Beckoff CU1128 Switch](<EtherCAT firmware&ESI/ESI/Beckhoff CUxxxx.xml>) slave information files into SYSCON\.net for bus scanning.
-![alt text](<image/adding esi file.png>){width=660}
+<img src="image/adding esi file.png" width="660">
 
 ##### Firmware Downloading
 After connecting to the cifx card via tcp server, you should download the [EtherCAT firmware](<EtherCAT firmware&ESI/cifX/cifxecm.nxf>) firstly.
-
-![alt text](<image/firmware download.png>){width=660}
+<img src="image/firmware download.png" width="660">
 
 ##### Scan for Slaves
-![alt text](<image/network scan.png>){width=660}
+<img src="image/network scan.png" width="660">
 
-![alt text](<image/liberman bus scan.png>){width=660}
-
-![alt text](<image/liberman topology for elmo joints.png>){width=600}
+You will get this for Liberman humanoid robot.
+<img src="image/liberman bus scan.png" width="660">
+The network topology of the robot is shown below.
+<img src="image/liberman topology for elmo joints.png" width="600">
 
 ##### General Setting
-![alt text](<image/general setting.png>){width=660}
+<img src="image/general setting.png" width="660">
+
 
 ##### Slave Process Data Setting
-Make sure the process data setting is the same with the **PdoTypeEnum** in host application code strictly (For example the [RxPdo](cifx-ros2/src/ethercat_master/elmo_ethercat_sdk/include/elmo_ethercat_sdk/RxPdo.hpp) and [TxPdo](cifx-ros2/src/ethercat_master/elmo_ethercat_sdk/include/elmo_ethercat_sdk/TxPdo.hpp)).
+It is imperative that the process data settings strictly conform to the PdoTypeEnum in the host application code without any deviation. (For example the [RxPdo](cifx-ros2/src/ethercat_master/elmo_ethercat_sdk/include/elmo_ethercat_sdk/RxPdo.hpp) and [TxPdo](cifx-ros2/src/ethercat_master/elmo_ethercat_sdk/include/elmo_ethercat_sdk/TxPdo.hpp)).
 **Otherwise the addressing in I/O data will be in wrong order.**
 
-![alt text](<image/slave process data setting.png>){width=660}
+<img src="image/slave process data setting.png" width="660">
 
 The final address table is shown below:
-![alt text](<image/address table.png>){width=660}
+<img src="image/address table.png" width="660">
 
 ##### Downloading the setting into CIFX card
 Downloading the configuration into CIFX card after finished.
